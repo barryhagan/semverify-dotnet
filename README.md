@@ -7,7 +7,27 @@
 
 Compare two NuGet package versions:
 
-`> semverify Newtonsoft.Json@11.0.2 Newtonsoft@json@12.0.1`
+```
+> semverify Newtonsoft.Json@12.0.1 Newtonsoft@json@12.0.2
+
++ public Newtonsoft.Json.MissingMemberHandling Newtonsoft.Json.JsonObjectAttribute.MissingMemberHandling { get; set; }
+
++ public Newtonsoft.Json.Linq.JTokenReader.JTokenReader(Newtonsoft.Json.Linq.JToken token, string initialPath) { }
+
++ public Newtonsoft.Json.JsonConverter Newtonsoft.Json.Serialization.JsonContract.InternalConverter { get; internal set; }
+
++ public System.Nullable<Newtonsoft.Json.MissingMemberHandling> Newtonsoft.Json.Serialization.JsonObjectContract.MissingMemberHandling { get; set; }
+
++ public bool Newtonsoft.Json.Serialization.JsonProperty.IsRequiredSpecified { get; }
+
++ public override int Newtonsoft.Json.Serialization.NamingStrategy.GetHashCode() { }
+
++ public override bool Newtonsoft.Json.Serialization.NamingStrategy.Equals(object obj) { }
+
++ protected new bool Newtonsoft.Json.Serialization.NamingStrategy.Equals(Newtonsoft.Json.Serialization.NamingStrategy other) { }
+
+The calculated semver for (12.0.1 => 12.0.2) was [Minor] (12.1.0)
+```
 
 Compare a NuGet package to a local assembly DLL:
 
