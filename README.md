@@ -8,7 +8,7 @@
 Compare two NuGet package versions:
 
 ```
-> semverify Newtonsoft.Json@12.0.1 Newtonsoft@json@12.0.2
+> semverify Newtonsoft.Json@12.0.1 Newtonsoft.Json@12.0.2
 
 + public Newtonsoft.Json.MissingMemberHandling Newtonsoft.Json.JsonObjectAttribute.MissingMemberHandling { get; set; }
 
@@ -31,12 +31,38 @@ The calculated semver for (12.0.1 => 12.0.2) was [Minor] (12.1.0)
 
 Compare a NuGet package to a local assembly DLL:
 
-`> semverify Newtonsoft.Json@11.0.2 ./Newtonsoft.Json.dll`
-
+`> semverify Newtonsoft.Json@11.0.2 ./Newtonsoft.Json.dll
 
 Output the public API of an assembly
 
 `> semverify ./Newtonsoft.Json.dll`
+
+Run semverify on commits to a branch to test against a published package using a Github Action:
+
+```
+name: semverify
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.0.100'
+    - name: Install semverify
+      run: dotnet tool install -g semverify-dotnet-tool --version 0.1.2-alpha01
+    - name: dotnet publish
+      run: dotnet publish -f netstandard2.0 -c Release -o Assemblies ./src/Marten/Marten.csproj
+    - name: Run semverify for the current commit
+      run: $HOME/.dotnet/tools/semverify Marten@3.8.0 Assemblies/Marten.dll
+      env:
+        DOTNET_ROOT: /opt/hostedtoolcache/dncs/3.0.100/x64
+```
 
 ## Usage
 
