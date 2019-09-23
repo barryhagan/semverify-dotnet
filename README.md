@@ -31,7 +31,7 @@ The calculated semver for (12.0.1 => 12.0.2) was [Minor] (12.1.0)
 
 Compare a NuGet package to a local assembly DLL:
 
-`> semverify Newtonsoft.Json@11.0.2 ./Newtonsoft.Json.dll
+`> semverify Newtonsoft.Json@11.0.2 ./Newtonsoft.Json.dll`
 
 Output the public API of an assembly
 
