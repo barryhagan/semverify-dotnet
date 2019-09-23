@@ -7,6 +7,7 @@ using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Semverify
@@ -73,7 +74,8 @@ namespace Semverify
 
         static async Task<int> RunCompare(string assembly1, string assembly2, List<DirectoryInfo> a1deps, List<DirectoryInfo> a2deps, List<DirectoryInfo> deps, DirectoryInfo outputApi, SemverChangeType? expectedChangeType)
         {
-            var frameworkAssemblies = (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string).Split(';');
+            var platformDelimiter = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':';
+            var frameworkAssemblies = (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string).Split(platformDelimiter);
 
             var assembly1Loader = AssemblyLoaderFactory.ResolveLoader(assembly1);
             var assembly1Options = await assembly1Loader.LoadAssembly(new AssemblyLoaderOptions
