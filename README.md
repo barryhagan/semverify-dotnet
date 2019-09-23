@@ -64,7 +64,7 @@ jobs:
         DOTNET_ROOT: /opt/hostedtoolcache/dncs/3.0.100/x64
 ```
 
-## Usage
+## CLI Usage
 
 ```
 Usage:
