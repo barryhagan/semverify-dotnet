@@ -59,7 +59,7 @@ jobs:
     - name: dotnet publish
       run: dotnet publish -f netstandard2.0 -c Release -o Assemblies ./src/Marten/Marten.csproj
     - name: Run semverify for the current commit
-      run: $HOME/.dotnet/tools/semverify Marten@3.8.0 Assemblies/Marten.dll
+      run: $HOME/.dotnet/tools/semverify Marten@3.8.0 Assemblies/Marten.dll --expected-change-type Minor
       env:
         DOTNET_ROOT: /opt/hostedtoolcache/dncs/3.0.100/x64
 ```
