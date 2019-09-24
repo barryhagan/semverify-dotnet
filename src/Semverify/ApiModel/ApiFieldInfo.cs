@@ -68,7 +68,7 @@ namespace Semverify.ApiModel
             }
             else
             {
-                mods.AddIf(HasNewModifier(FieldInfo.DeclaringType.BaseType, FieldInfo.Name), "new");
+                mods.AddIf(HasNewModifier(FieldInfo.DeclaringType.BaseType, FieldInfo), "new");
                 mods.AddIf(FieldInfo.IsStatic, "static");
                 mods.AddIf(FieldInfo.IsInitOnly || FieldInfo.HasAttribute(typeof(ReadOnlyAttribute)), "readonly");
             }

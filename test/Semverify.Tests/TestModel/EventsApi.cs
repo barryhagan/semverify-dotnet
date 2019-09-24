@@ -3,6 +3,26 @@ using System;
 
 namespace Semverify.Tests.TestModel
 {
+    public interface IEvent
+    {
+        string Descrition { get; set; }
+        bool Equals(IEvent other);
+    }
+
+    public abstract class EventBase : IEvent
+    {
+        public string Description { get; set; }
+        public bool Equals(IEvent other) { return false; }
+        public abstract string Test();
+        protected virtual string DescriptionNew { get; set; }
+        public string Descrition { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    }
+
+    public abstract class EventBaseToo : EventBase
+    {
+        protected override string DescriptionNew { get; set; }
+    }
+
     public class EventsApi
     {
         public class ClickEventArgs : EventArgs

@@ -99,24 +99,31 @@ namespace Semverify.ApiModel
                     }
                 }
 
-                var typeName = param.ParameterType.IsGenericParameter ? param.ParameterType.Name : param.ParameterType.ResolveQualifiedName();
-                if (param.ParameterType.IsByRef)
-                {
-                    typeName = typeName.TrimEnd('&');
-                }
-
-                paramList.Add($"{modString}{typeName} {param.Name}{defaultValue}");
+                paramList.Add($"{modString}{param.ParameterType.ResolveQualifiedName()} {param.Name}{defaultValue}");
             }
             return paramList;
         }
 
-        protected virtual bool HasNewModifier(Type baseType, string name)
+        protected virtual bool HasNewModifier(Type baseType, MemberInfo member)
         {
             while (baseType != null)
             {
-                if (baseType.GetMembers().Any(m => m.Name == name))
+                var baseMember = baseType.GetMembers().FirstOrDefault(m => m.Name == member.Name);
+                if (baseMember != null)
                 {
-                    return true;
+                    if (baseMember.MemberType == member.MemberType)
+                    {
+                        if (baseMember.MemberType == MemberTypes.Method)
+                        {
+                            var baseMethod = baseMember as MethodInfo;
+                            var method = member as MethodInfo;
+
+                            if (baseMethod.GetParameters().Select(p => p.ParameterType.FullName).SequenceEqual(method.GetParameters().Select(p => p.ParameterType.FullName)))
+                            {
+                                return true;
+                            }
+                        }
+                    }
                 }
                 baseType = baseType.BaseType;
             }

@@ -41,6 +41,8 @@ namespace Semverify.Tests.TestModel
     public class InheritanceApiGrandChild : InheritanceApiChild
     {
         public InheritanceApiGrandChild(int intParam) : base(intParam) { }
+        public InheritanceApiGrandChild this[int index] { get { return null; } }
+        public void ByRefMethod<T>(ref T[] param1) { }
         public new static int BaseMethod;
         public new void VirtualMethod()
         {

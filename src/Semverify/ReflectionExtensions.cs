@@ -57,23 +57,42 @@ namespace Semverify
                 return null;
             }
 
-            if (type.IsGenericParameter)
+            var suffix = string.Empty;
+            var resolvedType = type;
+            var innerType = resolvedType.GetElementType();
+            while (innerType != null)
+            {
+                if (!resolvedType.IsByRef)
+                {
+                    suffix = resolvedType.Name.Substring(innerType.Name.Length) + suffix;
+                }
+                resolvedType = innerType;
+                innerType = innerType.GetElementType();
+            }
+
+            var typeName = resolvedType.Name;
+            if (TypeAliases.TryGetValue(resolvedType.FullName ?? string.Empty, out var alias))
+            {
+                typeName = alias;
+            }
+
+            if (resolvedType.IsGenericParameter)
             {
                 if (applyGenericModifiers)
                 {
-                    switch (type.GenericParameterAttributes)
+                    switch (resolvedType.GenericParameterAttributes)
                     {
                         case GenericParameterAttributes.Contravariant:
-                            return $"in {type.Name}";
+                            return $"in {typeName}{suffix}";
                         case GenericParameterAttributes.Covariant:
-                            return $"out {type.Name}";
+                            return $"out {typeName}{suffix}";
                     }
                 }
 
-                return type.Name;
+                return $"{typeName}{suffix}";
             }
 
-            var prefix = withNamespace ? $"{type.Namespace}." : "";
+            var prefix = withNamespace && string.IsNullOrWhiteSpace(alias) ? $"{type.Namespace}." : "";
             if (type.IsNested && withNamespace)
             {
                 prefix = $"{ResolveDisplayName(type.DeclaringType, withNamespace, applyGenericModifiers)}.";
@@ -82,26 +101,10 @@ namespace Semverify
             if (type.GetGenericArguments().Any())
             {
                 var genericArgs = type.GetGenericArguments().Select(a => ResolveDisplayName(a, applyGenericModifiers: applyGenericModifiers));
-                return $"{prefix}{GenericParamsRegex.Replace(type.Name, $"<{string.Join(", ", genericArgs)}>")}";
+                return $"{prefix}{GenericParamsRegex.Replace(typeName, $"<{string.Join(", ", genericArgs)}>")}";
             }
 
-            return ResolveTypeAlias($"{prefix}{type.Name}");
-        }
-
-        private static string ResolveTypeAlias(string typeName)
-        {
-            var matchName = typeName ?? string.Empty;
-            var isArray = matchName.EndsWith("[]");
-            if (isArray)
-            {
-                matchName = typeName.Substring(0, typeName.Length - 2);
-            }
-            if (TypeAliases.TryGetValue(matchName, out var alias))
-            {
-                return isArray ? $"{alias}[]" : alias;
-            }
-
-            return typeName;
+            return $"{prefix}{typeName}{suffix}";
         }
     }
 }

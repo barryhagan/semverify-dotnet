@@ -8,6 +8,8 @@ namespace Semverify.ApiModel
 {
     internal class ApiMethodInfo : ApiMemberInfo
     {
+        internal const MethodAttributes IsVirtualFlags = MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot;
+        internal const MethodAttributes IsOverrideFlags = MethodAttributes.Virtual | MethodAttributes.HideBySig;
         private static readonly Dictionary<string, string> OperatorAliases = new Dictionary<string, string>
         {
           {"op_Addition", "operator +"},
@@ -54,8 +56,8 @@ namespace Semverify.ApiModel
             var mods = MemberInfo.DeclaringType.IsInterface ? new List<string>() : GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            var constraits = ResolveConstraints(MethodInfo.GetGenericArguments());
-            var constraintString = constraits.Any() ? $" {string.Join(" ", constraits)}" : "";
+            var constraints = ResolveConstraints(MethodInfo.GetGenericArguments());
+            var constraintString = constraints.Any() ? $" {string.Join(" ", constraints)}" : "";
 
             var extensionMethod = MethodInfo.HasAttribute(typeof(ExtensionAttribute)) ? "this " : "";
 
@@ -119,24 +121,18 @@ namespace Semverify.ApiModel
                     (condition: MethodInfo.IsPublic, value: "public"),
                 });
 
-            if (MethodInfo.IsAbstract)
+            if (!MethodInfo.IsFinal)
             {
-                mods.Add("abstract");
-            }
-            else
-            {
-                var over = MethodInfo.IsVirtual && MethodInfo.IsHideBySig && (MethodInfo.Attributes & MethodAttributes.NewSlot) != MethodAttributes.NewSlot;
-                if (over)
+                mods.AddFirstIf(new[]
                 {
-                    mods.Add("override");
-                }
-                else
-                {
-                    mods.AddIf(HasNewModifier(MethodInfo.DeclaringType.BaseType, MethodInfo.Name), "new");
-                    mods.AddIf(MethodInfo.IsVirtual && MethodInfo.IsHideBySig && !MethodInfo.IsFinal, "virtual");
-                    mods.AddIf(MethodInfo.IsStatic, "static");
-                }
+                    (MethodInfo.IsAbstract, "abstract"),
+                    ((MethodInfo.Attributes & IsVirtualFlags) == IsVirtualFlags, "virtual"),
+                    ((MethodInfo.Attributes & IsOverrideFlags) == IsOverrideFlags, "override"),
+                    (HasNewModifier(MethodInfo.DeclaringType.BaseType, MethodInfo), "new"),
+                });
             }
+
+            mods.AddIf(MethodInfo.IsStatic, "static");
 
             return mods;
         }
@@ -151,8 +147,8 @@ namespace Semverify.ApiModel
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            var constraits = ResolveConstraints(MethodInfo.GetGenericArguments());
-            var constraintString = constraits.Any() ? $" {string.Join(" ", constraits)}" : "";
+            var constraints = ResolveConstraints(MethodInfo.GetGenericArguments());
+            var constraintString = constraints.Any() ? $" {string.Join(" ", constraints)}" : "";
 
             var extensionMethod = MethodInfo.HasAttribute(typeof(ExtensionAttribute)) ? "this " : "";
 

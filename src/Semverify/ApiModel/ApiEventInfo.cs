@@ -58,29 +58,18 @@ namespace Semverify.ApiModel
                 (condition: (access & MethodAttributes.Family) == MethodAttributes.Family, value: "protected"),
             });
 
-            if ((access & MethodAttributes.Abstract) == MethodAttributes.Abstract)
+            if ((access & MethodAttributes.Final) != MethodAttributes.Final)
             {
-                mods.Add("abstract");
+                mods.AddFirstIf(new[]
+                {
+                    ((access & MethodAttributes.Abstract) == MethodAttributes.Abstract, "abstract"),
+                    ((access & ApiMethodInfo.IsVirtualFlags) == ApiMethodInfo.IsVirtualFlags, "virtual"),
+                    ((access & ApiMethodInfo.IsOverrideFlags) == ApiMethodInfo.IsOverrideFlags, "override"),
+                    (HasNewModifier(MemberInfo.DeclaringType.BaseType, MemberInfo), "new"),
+                });
             }
-            else
-            {
-                var overrideFlags = MethodAttributes.Virtual | MethodAttributes.HideBySig;
 
-                if ((access & overrideFlags) == overrideFlags)
-                {
-                    mods.Add("override");
-                }
-                else if (HasNewModifier(MemberInfo.DeclaringType.BaseType, MemberInfo.Name))
-                {
-                    mods.Add("new");
-                }
-                else
-                {
-                    mods.AddIf(((access & MethodAttributes.Virtual) == MethodAttributes.Virtual && (access & MethodAttributes.Final) != MethodAttributes.Final), "virtual");
-                }
-
-                mods.AddIf((access & MethodAttributes.Static) == MethodAttributes.Static, "static");
-            }
+            mods.AddIf((access & MethodAttributes.Static) == MethodAttributes.Static, "static");
 
             return mods;
         }

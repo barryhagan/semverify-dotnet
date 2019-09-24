@@ -38,11 +38,11 @@ namespace Semverify.ApiModel
             impls.AddIf(baseType != null, baseType);
             impls.AddRange(GetInterfaces().OrderBy(i => i));
             var implString = impls.Any() ? $" : {string.Join(", ", impls)}" : "";
-            var constraits = ResolveConstraints(TypeInfo.GetGenericArguments());
-            var constraintString = constraits.Any() ? $" {string.Join(" ", constraits)}" : "";
+            var constraints = ResolveConstraints(TypeInfo.GetGenericArguments());
+            var constraintString = constraints.Any() ? $" {string.Join(" ", constraints)}" : "";
             var accessorString = $" {GetAccessor()}";
 
-            var name = $"{modString}{GetLocalName()}{implString}{constraintString}{accessorString}";
+            var name = $"{modString}{GetLocalName()}{implString}{constraintString}";
 
             var apiBuilder = new StringBuilder();
 
@@ -112,8 +112,8 @@ namespace Semverify.ApiModel
             impls.AddRange(GetInterfaces().OrderBy(i => i));
             var implString = impls.Any() ? $" : {string.Join(", ", impls)}" : "";
 
-            var constraits = ResolveConstraints(TypeInfo.GetGenericArguments());
-            var constraintString = constraits.Any() ? $" {string.Join(" ", constraits)}" : "";
+            var constraints = ResolveConstraints(TypeInfo.GetGenericArguments());
+            var constraintString = constraints.Any() ? $" {string.Join(" ", constraints)}" : "";
 
             var accessorString = $" {GetAccessor()}";
            
