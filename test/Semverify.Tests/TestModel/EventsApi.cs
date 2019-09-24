@@ -9,6 +9,11 @@ namespace Semverify.Tests.TestModel
         bool Equals(IEvent other);
     }
 
+    public interface IEvent<in T>
+    {
+        bool Handle(T e);
+    }
+      
     public abstract class EventBase : IEvent
     {
         public string Description { get; set; }

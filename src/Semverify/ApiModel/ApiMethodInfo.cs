@@ -113,13 +113,13 @@ namespace Semverify.ApiModel
             }
 
             mods.AddFirstIf(new[]
-{
-                    (condition: MethodInfo.IsFamilyAndAssembly, value: "private protected"),
-                    (condition: MethodInfo.IsFamilyOrAssembly, value: "protected internal"),
-                    (condition: MethodInfo.IsAssembly, value: "internal"),
-                    (condition: MethodInfo.IsFamily, value: "protected"),
-                    (condition: MethodInfo.IsPublic, value: "public"),
-                });
+            {
+                (condition: MethodInfo.IsFamilyAndAssembly, value: "private protected"),
+                (condition: MethodInfo.IsFamilyOrAssembly, value: "protected internal"),
+                (condition: MethodInfo.IsAssembly, value: "internal"),
+                (condition: MethodInfo.IsFamily, value: "protected"),
+                (condition: MethodInfo.IsPublic, value: "public"),
+            });
 
             if (!MethodInfo.IsFinal)
             {
