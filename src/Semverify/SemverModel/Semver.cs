@@ -76,9 +76,9 @@ namespace Semverify.SemverModel
             {
                 semver = new Semver
                 {
-                    Major = Convert.ToInt16(match.Groups["major"].Value),
-                    Minor = Convert.ToInt16(match.Groups["minor"].Value),
-                    Patch = Convert.ToInt16(match.Groups["patch"].Value),
+                    Major = Convert.ToInt32(match.Groups["major"].Value),
+                    Minor = Convert.ToInt32(match.Groups["minor"].Value),
+                    Patch = Convert.ToInt32(match.Groups["patch"].Value),
                     Prerelease = match.Groups["prerelease"]?.Value,
                     BuildMetadata = match.Groups["buildmetadata"]?.Value,
                 };

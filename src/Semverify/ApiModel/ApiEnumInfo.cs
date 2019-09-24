@@ -25,7 +25,10 @@ namespace Semverify.ApiModel
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            var name = $"{modString}{GetLocalName()}";
+            var baseType = (MemberInfo as TypeInfo).GetEnumUnderlyingType();
+            var baseTypeString = baseType.FullName == typeof(int).FullName ? "" : $" : {baseType.ResolveQualifiedName()}";
+
+            var name = $"{modString}{GetLocalName()}{baseTypeString}";
 
             var apiBuilder = new StringBuilder();
             apiBuilder.AppendLine($"{new string(' ', indentSize)}{name}");
@@ -50,6 +53,19 @@ namespace Semverify.ApiModel
                 }
                 yield return new ApiEnumFieldInfo(enumValue);
             }
+        }
+
+        public override string GetSignature()
+        {
+            var mods = GetModifiers();
+            var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
+
+            var baseType = (MemberInfo as TypeInfo).GetEnumUnderlyingType();
+            var baseTypeString = $" : {baseType.ResolveQualifiedName()}";
+
+            var accessorString = $" {GetAccessor()}";
+
+            return $"{modString}{GetFullName()}{baseTypeString}{accessorString}";
         }
     }
 }

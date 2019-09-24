@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -28,8 +29,17 @@ namespace Semverify.ApiModel
 
             if (x is ApiEnumFieldInfo xEnumValue && y is ApiEnumFieldInfo yEnumValue)
             {
-                var enumCompare = ((int)xEnumValue.GetRawConstantValue()).CompareTo((int)yEnumValue.GetRawConstantValue());
-                if (enumCompare != 0) return enumCompare;
+                var xEnumType = xEnumValue.MemberInfo.DeclaringType.GetEnumUnderlyingType();
+                var yEnumType = yEnumValue.MemberInfo.DeclaringType.GetEnumUnderlyingType();
+
+                if (xEnumType.FullName == yEnumType.FullName)
+                {
+                    dynamic xValue = Convert.ChangeType(xEnumValue.GetRawConstantValue(), Type.GetType(xEnumType.FullName));
+                    dynamic yValue = Convert.ChangeType(yEnumValue.GetRawConstantValue(), Type.GetType(yEnumType.FullName));
+
+                    var enumCompare = xValue.CompareTo(yValue);
+                    if (enumCompare != 0) return enumCompare;
+                }
             }
           
             var nameCompare = string.CompareOrdinal(x.GetLocalName(), y.GetLocalName());
