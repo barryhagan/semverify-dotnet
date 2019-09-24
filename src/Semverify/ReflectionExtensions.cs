@@ -70,10 +70,10 @@ namespace Semverify
                 innerType = innerType.GetElementType();
             }
 
-            var typeName = resolvedType.Name;
+            var typeName = $"{resolvedType.Name}{suffix}";
             if (TypeAliases.TryGetValue(resolvedType.FullName ?? string.Empty, out var alias))
             {
-                typeName = alias;
+                typeName = $"{alias}{suffix}";
             }
 
             if (resolvedType.IsGenericParameter)
@@ -83,13 +83,13 @@ namespace Semverify
                     switch (resolvedType.GenericParameterAttributes)
                     {
                         case GenericParameterAttributes.Contravariant:
-                            return $"in {typeName}{suffix}";
+                            return $"in {typeName}";
                         case GenericParameterAttributes.Covariant:
-                            return $"out {typeName}{suffix}";
+                            return $"out {typeName}";
                     }
                 }
 
-                return $"{typeName}{suffix}";
+                return $"{typeName}";
             }
 
             var prefix = withNamespace && string.IsNullOrWhiteSpace(alias) ? $"{type.Namespace}." : "";
@@ -101,10 +101,10 @@ namespace Semverify
             if (type.GetGenericArguments().Any())
             {
                 var genericArgs = type.GetGenericArguments().Select(a => ResolveDisplayName(a, applyGenericModifiers: applyGenericModifiers));
-                return $"{prefix}{GenericParamsRegex.Replace(typeName, $"<{string.Join(", ", genericArgs)}>")}";
+                return $"{prefix}{GenericParamsRegex.Replace($"{typeName}", $"<{string.Join(", ", genericArgs)}>")}";
             }
 
-            return $"{prefix}{typeName}{suffix}";
+            return $"{prefix}{typeName}";
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Semverify.ApiModel
                 apiBuilder.AppendLine($"{new string(' ', indentSize)}{{");
                 foreach (var apiTypeInfo in namespaceGroup.OrderBy(t => t.GetLocalName()))
                 {
-                    apiBuilder.Append(apiTypeInfo.FormatForApiOutput(indentLevel + 1));
+                    apiBuilder.AppendLine(apiTypeInfo.FormatForApiOutput(indentLevel + 1));
                 }
                 apiBuilder.AppendLine($"{new string(' ', indentSize)}}}");
             }
