@@ -26,6 +26,12 @@ namespace Semverify.ApiModel
             var memberCompare = OrderForMemberType(x.MemberType).CompareTo(OrderForMemberType(y.MemberType));
             if (memberCompare != 0) return memberCompare;
 
+            if (x is ApiEnumFieldInfo xEnumValue && y is ApiEnumFieldInfo yEnumValue)
+            {
+                var enumCompare = ((int)xEnumValue.GetRawConstantValue()).CompareTo((int)yEnumValue.GetRawConstantValue());
+                if (enumCompare != 0) return enumCompare;
+            }
+          
             var nameCompare = string.CompareOrdinal(x.GetLocalName(), y.GetLocalName());
             if (nameCompare != 0) return nameCompare;
 

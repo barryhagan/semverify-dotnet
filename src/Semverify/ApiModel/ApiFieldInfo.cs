@@ -8,7 +8,7 @@ namespace Semverify.ApiModel
 {
     internal class ApiFieldInfo : ApiMemberInfo
     {
-        private readonly FieldInfo fieldInfo;
+        protected readonly FieldInfo FieldInfo;
 
         public ApiFieldInfo(MemberInfo memberInfo) : base(memberInfo)
         {
@@ -17,14 +17,14 @@ namespace Semverify.ApiModel
                 throw new ArgumentException("The memberInfo is not a field", nameof(memberInfo));
             }
 
-            fieldInfo = field;
+            FieldInfo = field;
         }
 
         public override string FormatForApiOutput(int indentLevel = 0)
         {
             var mods = MemberInfo.DeclaringType.IsInterface ? new List<string>() : GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
-            var name = $"{modString}{fieldInfo.FieldType.ResolveQualifiedName()} {GetLocalName()};";
+            var name = $"{modString}{FieldInfo.FieldType.ResolveQualifiedName()} {GetLocalName()};";
             return $"{new string(' ', indentLevel * IndentSpaces)}{name}";
         }
 
@@ -35,42 +35,42 @@ namespace Semverify.ApiModel
 
         public override string GetFullName()
         {
-            return $"{fieldInfo.DeclaringType.ResolveQualifiedName()}.{GetLocalName()}";
+            return $"{FieldInfo.DeclaringType.ResolveQualifiedName()}.{GetLocalName()}";
         }
 
         public override string GetLocalName()
         {
-            return fieldInfo.Name;
+            return FieldInfo.Name;
         }
 
         public override IList<string> GetModifiers()
         {
             var mods = new List<string>();
 
-            if (fieldInfo.DeclaringType.IsInterface)
+            if (FieldInfo.DeclaringType.IsInterface)
             {
                 mods.Add("public");
                 return mods;
             }
 
             mods.AddFirstIf(new[] {
-                (condition: fieldInfo.IsFamilyAndAssembly, value: "private protected"),
-                (condition: fieldInfo.IsFamilyOrAssembly, value: "protected internal"),
-                (condition: fieldInfo.IsAssembly, value: "internal"),
-                (condition: fieldInfo.IsFamily, value: "protected"),
-                (condition: fieldInfo.IsPublic, value: "public"),
+                (condition: FieldInfo.IsFamilyAndAssembly, value: "private protected"),
+                (condition: FieldInfo.IsFamilyOrAssembly, value: "protected internal"),
+                (condition: FieldInfo.IsAssembly, value: "internal"),
+                (condition: FieldInfo.IsFamily, value: "protected"),
+                (condition: FieldInfo.IsPublic, value: "public"),
             });
 
-            var isConst = fieldInfo.IsLiteral && !fieldInfo.IsInitOnly;
+            var isConst = FieldInfo.IsLiteral && !FieldInfo.IsInitOnly;
             if (isConst)
             {
                 mods.Add("const");
             }
             else
             {
-                mods.AddIf(HasNewModifier(fieldInfo.DeclaringType.BaseType, fieldInfo.Name), "new");
-                mods.AddIf(fieldInfo.IsStatic, "static");
-                mods.AddIf(fieldInfo.IsInitOnly || fieldInfo.HasAttribute(typeof(ReadOnlyAttribute)), "readonly");
+                mods.AddIf(HasNewModifier(FieldInfo.DeclaringType.BaseType, FieldInfo.Name), "new");
+                mods.AddIf(FieldInfo.IsStatic, "static");
+                mods.AddIf(FieldInfo.IsInitOnly || FieldInfo.HasAttribute(typeof(ReadOnlyAttribute)), "readonly");
             }
 
             return mods;
@@ -81,7 +81,7 @@ namespace Semverify.ApiModel
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            return $"{modString}{fieldInfo.FieldType.ResolveQualifiedName()} {GetFullName()};";
+            return $"{modString}{FieldInfo.FieldType.ResolveQualifiedName()} {GetFullName()};";
         }
     }
 }

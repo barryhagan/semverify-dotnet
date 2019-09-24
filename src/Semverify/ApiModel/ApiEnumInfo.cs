@@ -21,7 +21,6 @@ namespace Semverify.ApiModel
         public override string FormatForApiOutput(int indentLevel = 0)
         {
             var indentSize = indentLevel * IndentSpaces;
-            var innerIndent = (indentLevel + 1) * IndentSpaces;
 
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
@@ -32,14 +31,9 @@ namespace Semverify.ApiModel
             apiBuilder.AppendLine($"{new string(' ', indentSize)}{name}");
             apiBuilder.AppendLine($"{new string(' ', indentSize)}{{");
 
-            var enumValues = TypeInfo.GetFields(BindingFlags.Public | BindingFlags.Static);
-            foreach (var enumValue in enumValues.OrderBy(e => e.GetRawConstantValue()))
+            foreach (var enumValue in EnumerateMembers())
             {
-                if (enumValue.IsSpecialName)
-                {
-                    continue;
-                }
-                apiBuilder.AppendLine($"{new string(' ', innerIndent)}{enumValue.Name} = {enumValue.GetRawConstantValue()},");
+                apiBuilder.AppendLine(enumValue.FormatForApiOutput(indentLevel + 1));
             }
 
             apiBuilder.AppendLine($"{new string(' ', indentSize)}}}");
@@ -48,7 +42,14 @@ namespace Semverify.ApiModel
 
         public override IEnumerable<ApiMemberInfo> EnumerateMembers()
         {
-            return new List<ApiMemberInfo>();
+            foreach (var enumValue in TypeInfo.GetFields(BindingFlags.Public | BindingFlags.Static).OrderBy(e => e.GetRawConstantValue()))
+            {
+                if (enumValue.IsSpecialName)
+                {
+                    continue;
+                }
+                yield return new ApiEnumFieldInfo(enumValue);
+            }
         }
     }
 }
