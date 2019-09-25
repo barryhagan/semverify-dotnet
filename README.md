@@ -3,6 +3,12 @@
 
 [![Nuget Package](https://badgen.net/nuget/v/semverify-dotnet-tool)](https://www.nuget.org/packages/semverify-dotnet-tool/)
 
+This tool uses `System.Reflection.MetadataLoadContext` from .NET Core 3.0 to reflect two versions of a .NET assembly and compares the public API differences based on https://semver.org rules.   The output can be used to validate that a public package update follows semver guidelines, and can be used to calculate the next semver for an assembly based on the pending code changes.
+
+My primary goal for writing this tool was to run a GitHub Action against a forked repository so I could validate that my changes would comply with the next intended release of an OSS project.
+
+It could also be used by code review teams to output and inspect the complete public API of an assembly (by passing it single assembly argument).
+
 ## Examples
 
 Compare two NuGet package versions:
@@ -31,20 +37,20 @@ semverify Newtonsoft.Json@12.0.1 Newtonsoft.Json@12.0.2
 The calculated semver for (12.0.1 => 12.0.2) was [Minor] (12.1.0)
 ```
 
-Compare a NuGet package to a local assembly DLL:
+Compare a NuGet package to a locally built assembly DLL:
 
 ```console
 semverify Newtonsoft.Json@11.0.2 ./Newtonsoft.Json.dll
 ```
 
-Output the public API of an assembly
+Output the public API of an assembly:
 
 ```console
 semverify ./Newtonsoft.Json.dll
 ```
 
 
-Run semverify on commits to a branch to test against a published package using a Github Action:
+Run semverify on commits to a branch using a GitHub Action:
 
 ```
 name: semverify
