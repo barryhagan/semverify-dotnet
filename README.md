@@ -55,7 +55,7 @@ jobs:
       with:
         dotnet-version: '3.0.100'
     - name: Install semverify
-      run: dotnet tool install -g semverify-dotnet-tool --version 0.1.2-alpha01
+      run: dotnet tool install -g semverify-dotnet-tool --version 0.1.4-alpha01
     - name: dotnet publish
       run: dotnet publish -f netstandard2.0 -c Release -o Assemblies ./src/Marten/Marten.csproj
     - name: Run semverify for the current commit
