@@ -69,12 +69,12 @@ namespace Semverify.ApiModel
 
             if (MethodInfo.IsSpecialName && (MethodInfo.Name == "op_Implicit" || MethodInfo.Name == "op_Explicit"))
             {
-                var name = $"{modString}{GetLocalName()}{MethodInfo.ReturnType.ResolveLocalName(applyGenericModifiers: false)}({extensionMethod}{parameterString}){constraintString}{accessorString}";
+                var name = $"{modString}{GetLocalName()}{MethodInfo.ReturnType.ResolveLocalName(GetReturnTypeNullability(MethodInfo), false)}({extensionMethod}{parameterString}){constraintString}{accessorString}";
                 return $"{new string(' ', indentLevel * IndentSpaces)}{name}";
             }
             else
             {
-                var name = $"{modString}{MethodInfo.ReturnType.ResolveQualifiedName(applyGenericModifiers: false)} {GetLocalName()}({extensionMethod}{parameterString}){constraintString}{accessorString}";
+                var name = $"{modString}{MethodInfo.ReturnType.ResolveQualifiedName(GetReturnTypeNullability(MethodInfo), false)} {GetLocalName()}({extensionMethod}{parameterString}){constraintString}{accessorString}";
                 return $"{new string(' ', indentLevel * IndentSpaces)}{name}";
             }
         }
@@ -158,7 +158,7 @@ namespace Semverify.ApiModel
             var accessor = GetAccessor();
             var accessorString = accessor.Length > 0 ? $" {accessor}" : ";";
 
-            return $"{modString}{MethodInfo.ReturnType.ResolveQualifiedName(applyGenericModifiers: false)} {GetFullName()}({extensionMethod}{parameterString}){constraintString}{accessorString}";
+            return $"{modString}{MethodInfo.ReturnType.ResolveQualifiedName(GetReturnTypeNullability(MethodInfo), applyGenericModifiers: false)} {GetFullName()}({extensionMethod}{parameterString}){constraintString}{accessorString}";
         }
 
         protected virtual string FormatGenericArgs()
@@ -166,9 +166,19 @@ namespace Semverify.ApiModel
             var genericArgs = MethodInfo.GetGenericArguments();
             if (genericArgs.Any())
             {
-                return $"<{string.Join(", ", genericArgs.OrderBy(a => a.GenericParameterPosition).Select(a => a.ResolveLocalName(!MethodInfo.DeclaringType.IsInterface)))}>";
+                return $"<{string.Join(", ", genericArgs.OrderBy(a => a.GenericParameterPosition).Select(a => a.ResolveLocalName(applyGenericModifiers: !MethodInfo.DeclaringType.IsInterface)))}>";
             }
             return string.Empty;
+        }
+
+        public static byte[] GetReturnTypeNullability(MethodInfo methodInfo)
+        {
+            if (methodInfo.ReturnType.IsValueType)
+            {
+                return null;
+            }
+
+            return methodInfo.ReturnTypeCustomAttributes.GetReferenceNullability(methodInfo);
         }
     }
 }

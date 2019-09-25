@@ -19,8 +19,9 @@ namespace Semverify.ApiModel
         {
             var mods = MemberInfo.DeclaringType.IsInterface ? new List<string>() : GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
-            var eventType = addMethod.GetParameters().First().ParameterType.ResolveQualifiedName();
-            return $"{new string(' ', indentLevel * IndentSpaces)}{modString}event {eventType} {GetLocalName()}{GetAccessor()}";
+            var eventType = addMethod.GetParameters().First();
+            var eventTypeString = eventType.ParameterType.ResolveQualifiedName(eventType.GetReferenceNullability(MemberInfo));
+            return $"{new string(' ', indentLevel * IndentSpaces)}{modString}event {eventTypeString} {GetLocalName()}{GetAccessor()}";
         }
 
         public override string GetAccessor()

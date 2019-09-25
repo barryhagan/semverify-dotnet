@@ -24,7 +24,7 @@ namespace Semverify.ApiModel
         {
             var mods = MemberInfo.DeclaringType.IsInterface ? new List<string>() : GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
-            var name = $"{modString}{FieldInfo.FieldType.ResolveQualifiedName()} {GetLocalName()};";
+            var name = $"{modString}{FieldInfo.FieldType.ResolveQualifiedName(FieldInfo.GetReferenceNullability())} {GetLocalName()};";
             return $"{new string(' ', indentLevel * IndentSpaces)}{name}";
         }
 
@@ -81,7 +81,7 @@ namespace Semverify.ApiModel
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            return $"{modString}{FieldInfo.FieldType.ResolveQualifiedName()} {GetFullName()};";
+            return $"{modString}{FieldInfo.FieldType.ResolveQualifiedName(FieldInfo.GetReferenceNullability())} {GetFullName()};";
         }
     }
 }

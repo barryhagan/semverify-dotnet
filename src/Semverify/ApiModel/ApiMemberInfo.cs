@@ -36,7 +36,7 @@ namespace Semverify.ApiModel
         {
             var genericArgs = method.GetGenericArguments()
                 .OrderBy(a => a.GenericParameterPosition)
-                .Select(a => $"{a.ResolveQualifiedName(applyGenericModifiers)}");
+                .Select(a => $"{a.ResolveQualifiedName(applyGenericModifiers: applyGenericModifiers)}");
 
             return genericArgs.Any() ? $"<{string.Join(", ", genericArgs)}>" : "";
         }
@@ -95,11 +95,11 @@ namespace Semverify.ApiModel
                     }
                     catch (BadImageFormatException)
                     {
-                        defaultValue = " = ?";
+                        defaultValue = " = ???";
                     }
                 }
 
-                paramList.Add($"{modString}{param.ParameterType.ResolveQualifiedName(applyGenericModifiers)} {param.Name}{defaultValue}");
+                paramList.Add($"{modString}{param.ParameterType.ResolveQualifiedName(param.GetReferenceNullability(MemberInfo), applyGenericModifiers)} {param.Name}{defaultValue}");
             }
             return paramList;
         }

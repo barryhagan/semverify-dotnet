@@ -25,7 +25,7 @@ namespace Semverify.ApiModel
             var mods = MemberInfo.DeclaringType.IsInterface ? new List<string>() : GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
             var accessor = GetAccessor();
-            return $"{new string(' ', indentLevel * IndentSpaces)}{modString}{propertyInfo.PropertyType.ResolveQualifiedName()} {GetLocalName()} {accessor}";
+            return $"{new string(' ', indentLevel * IndentSpaces)}{modString}{propertyInfo.PropertyType.ResolveQualifiedName(propertyInfo.GetReferenceNullability())} {GetLocalName()} {accessor}";
         }
 
         public override string GetFullName()
@@ -87,7 +87,7 @@ namespace Semverify.ApiModel
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
             var accessor = GetAccessor();
-            return $"{modString}{propertyInfo.PropertyType.ResolveQualifiedName()} {GetFullName()} {accessor}";
+            return $"{modString}{propertyInfo.PropertyType.ResolveQualifiedName(propertyInfo.GetReferenceNullability())} {GetFullName()} {accessor}";
         }
 
         public override string GetAccessor()

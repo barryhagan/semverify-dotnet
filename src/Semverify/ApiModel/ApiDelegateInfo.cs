@@ -21,9 +21,11 @@ namespace Semverify.ApiModel
             var parameters = ResolveParameters(invokeMethod.GetParameters());
             var parameterString = string.Join(", ", parameters);
 
-            var name = $"{modString}delegate {invokeMethod.ReturnType.ResolveQualifiedName()} {TypeInfo.ResolveLocalName()}{FormatGenericArgs(invokeMethod)}({parameterString});";
+            var returnType = invokeMethod.ReturnType.ResolveQualifiedName(ApiMethodInfo.GetReturnTypeNullability(invokeMethod));
+            var name = TypeInfo.ResolveLocalName(TypeInfo.GetReferenceNullability());
+            var sig = $"{modString}delegate {returnType} {name}{FormatGenericArgs(invokeMethod)}({parameterString});";
 
-            return $"{new string(' ', indentLevel * IndentSpaces)}{name}";
+            return $"{new string(' ', indentLevel * IndentSpaces)}{sig}";
         }
 
         public override IList<string> GetModifiers()
@@ -50,7 +52,10 @@ namespace Semverify.ApiModel
             var parameters = ResolveParameters(invokeMethod.GetParameters());
             var parameterString = string.Join(", ", parameters);
 
-            return $"{modString}delegate {invokeMethod.ReturnType.ResolveQualifiedName()} {TypeInfo.ResolveQualifiedName()}{FormatGenericArgs(invokeMethod)}({parameterString});";
+            var returnType = invokeMethod.ReturnType.ResolveQualifiedName(ApiMethodInfo.GetReturnTypeNullability(invokeMethod));
+            var name = TypeInfo.ResolveQualifiedName();
+
+            return $"{modString}delegate {returnType} {name}{FormatGenericArgs(invokeMethod)}({parameterString});";
         }
 
         public override IEnumerable<ApiMemberInfo> EnumerateMembers()

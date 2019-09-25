@@ -5,7 +5,7 @@ namespace Semverify.Tests.TestModel
 {
     public interface IEvent
     {
-        string Descrition { get; set; }
+        string Name { get; set; }
         bool Equals(IEvent other);
     }
 
@@ -20,7 +20,7 @@ namespace Semverify.Tests.TestModel
         public bool Equals(IEvent other) { return false; }
         public abstract string Test();
         protected virtual string DescriptionNew { get; set; }
-        public string Descrition { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 
     public abstract class EventBaseToo : EventBase
