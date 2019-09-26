@@ -52,7 +52,7 @@ namespace Semverify
                         Arity = ArgumentArity.ZeroOrMore
                     }
                 },
-                new Option("--output-api", "The path to output the generated API text files")
+                new Option(new string[]{"--output-api" }, "The path to output the generated API text files")
                 {
                     Argument = new Argument<DirectoryInfo>
                     {

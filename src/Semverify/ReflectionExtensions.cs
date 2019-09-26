@@ -155,6 +155,7 @@ namespace Semverify
             }
 
             var prefix = withNamespace && string.IsNullOrWhiteSpace(alias) ? $"{type.Namespace}." : "";
+
             if (type.IsNested && withNamespace)
             {
                 prefix = $"{ResolveDisplayName(type.DeclaringType, new byte[] { 0 }.AsEnumerable().GetEnumerator(), withNamespace, applyGenericModifiers)}.";
@@ -163,7 +164,7 @@ namespace Semverify
             if (resolvedType.GetGenericArguments().Any())
             {
                 var genericArgs = resolvedType.GetGenericArguments().Select(a => ResolveDisplayName(a, nullableEnumerator, withNamespace, applyGenericModifiers: applyGenericModifiers));
-                return $"{prefix}{GenericParamsRegex.Replace($"{typeName}", $"<{string.Join(", ", genericArgs)}>")}";
+                typeName = GenericParamsRegex.Replace(typeName, $"<{string.Join(", ", genericArgs)}>");
             }
 
             return $"{prefix}{typeName}";

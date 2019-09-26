@@ -97,13 +97,13 @@ namespace Semverify.ApiModel
             var setter = propertyInfo.GetSetMethod(true);
 
             var accessString = new StringBuilder("{");
-            if (getter != null && !getter.IsPrivate)
+            if (getter != null && !getter.IsPrivate && !getter.IsAssembly)
             {
                 var getterMods = new ApiMethodInfo(getter).GetModifiers().Except(mods);
                 var getterString = getterMods.Any() ? $" {string.Join(" ", getterMods)} get;" : " get;";
                 accessString.Append(getterString);
             }
-            if (setter != null && !setter.IsPrivate)
+            if (setter != null && !setter.IsPrivate && !setter.IsAssembly)
             {
                 var setterMods = new ApiMethodInfo(setter).GetModifiers().Except(mods);
                 var setterString = setterMods.Any() ? $" {string.Join(" ", setterMods)} set;" : " set;";
