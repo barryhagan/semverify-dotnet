@@ -4,12 +4,11 @@ using System.Text;
 
 namespace Semverify.Tests.TestAttributes
 {
-    internal class SignatureAttribute : Attribute
+    internal class ApiLocalNameAttribute : Attribute
     {
         public string Value { get; private set; }
-        public bool Isolate { get; set; }
 
-        public SignatureAttribute(string value)
+        public ApiLocalNameAttribute(string value)
         {
             Value = value;
         }

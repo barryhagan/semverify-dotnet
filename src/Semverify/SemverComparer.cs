@@ -285,7 +285,7 @@ namespace Semverify
             {
                 foreach (var sig in mod.EnumerateAllMembers().Select(m => m.GetSignature()))
                 {
-                    apiBuilder.AppendLine(sig);
+                    apiBuilder.AppendLine($"[ApiSignature(\"{sig}\")]");
                 }
             }
 

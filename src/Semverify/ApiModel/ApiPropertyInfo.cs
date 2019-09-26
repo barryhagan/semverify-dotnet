@@ -57,13 +57,13 @@ namespace Semverify.ApiModel
                 return mods;
             }
 
-            var access = (propertyInfo.GetGetMethod(true)?.Attributes ?? 0) | (propertyInfo.GetSetMethod(true)?.Attributes ?? 0);
+            var access = (GetVisibleGetter()?.Attributes ?? 0) | (GetVisibleSetter()?.Attributes ?? 0);
 
             mods.AddFirstIf(new[] {
                     (condition: (access & MethodAttributes.Public) == MethodAttributes.Public, value: "public"),
-                    (condition: (access & MethodAttributes.FamANDAssem) == MethodAttributes.FamANDAssem, value: "private protected"),
                     (condition: (access & MethodAttributes.FamORAssem) == MethodAttributes.FamORAssem, value: "protected internal"),
                     (condition: (access & MethodAttributes.Family) == MethodAttributes.Family, value: "protected"),
+                    (condition: (access & MethodAttributes.FamANDAssem) == MethodAttributes.FamANDAssem, value: "private protected"),
                 });
 
             if ((access & MethodAttributes.Final) != MethodAttributes.Final)
@@ -90,20 +90,54 @@ namespace Semverify.ApiModel
             return $"{modString}{propertyInfo.PropertyType.ResolveQualifiedName(propertyInfo.GetReferenceNullability())} {GetFullName()} {accessor}";
         }
 
+        private MethodInfo GetVisibleGetter()
+        {
+            var getter = propertyInfo.GetGetMethod(true);
+
+            if (getter == null)
+            {
+                return null;
+            }
+
+            if (getter.IsPublic || getter.IsFamily || getter.IsFamilyOrAssembly)
+            {
+                return getter;
+            }
+
+            return null;
+        }
+
+        private MethodInfo GetVisibleSetter()
+        {
+            var setter = propertyInfo.GetSetMethod(true);
+
+            if (setter == null)
+            {
+                return null;
+            }
+
+            if (setter.IsPublic || setter.IsFamily || setter.IsFamilyOrAssembly)
+            {
+                return setter;
+            }
+
+            return null;
+        }
+
         public override string GetAccessor()
         {
             var mods = GetModifiers();
-            var getter = propertyInfo.GetGetMethod(true);
-            var setter = propertyInfo.GetSetMethod(true);
+            var getter = GetVisibleGetter();
+            var setter = GetVisibleSetter();
 
             var accessString = new StringBuilder("{");
-            if (getter != null && !getter.IsPrivate && !getter.IsAssembly)
+            if (getter != null)
             {
                 var getterMods = new ApiMethodInfo(getter).GetModifiers().Except(mods);
                 var getterString = getterMods.Any() ? $" {string.Join(" ", getterMods)} get;" : " get;";
                 accessString.Append(getterString);
             }
-            if (setter != null && !setter.IsPrivate && !setter.IsAssembly)
+            if (setter != null)
             {
                 var setterMods = new ApiMethodInfo(setter).GetModifiers().Except(mods);
                 var setterString = setterMods.Any() ? $" {string.Join(" ", setterMods)} set;" : " set;";

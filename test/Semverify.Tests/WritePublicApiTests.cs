@@ -18,7 +18,7 @@ namespace Semverify.Tests
 
             foreach (var apiMember in apiMembers)
             {
-                if (apiMember.MemberInfo.GetCustomAttributes(typeof(SignatureAttribute), false).FirstOrDefault() is SignatureAttribute expectedSignature)
+                if (apiMember.MemberInfo.GetCustomAttributes(typeof(ApiSignatureAttribute), false).FirstOrDefault() is ApiSignatureAttribute expectedSignature)
                 {
                     apiMember.GetSignature().ShouldBe(expectedSignature.Value);
                 }
@@ -35,7 +35,7 @@ namespace Semverify.Tests
 
             foreach (var apiMember in apiMembers)
             {
-                if (apiMember.MemberInfo.GetCustomAttributes(typeof(SignatureAttribute), false).FirstOrDefault() is SignatureAttribute expectedSignature && expectedSignature.Isolate)
+                if (apiMember.MemberInfo.GetCustomAttributes(typeof(ApiSignatureAttribute), false).FirstOrDefault() is ApiSignatureAttribute expectedSignature && expectedSignature.Isolate)
                 {
                     apiMember.GetSignature().ShouldBe(expectedSignature.Value);
                 }
@@ -50,7 +50,7 @@ namespace Semverify.Tests
 
             foreach (var apiMember in apiMembers)
             {
-                if (apiMember.MemberInfo.GetCustomAttributes(typeof(LocalNameAttribute), false).FirstOrDefault() is LocalNameAttribute expectedName)
+                if (apiMember.MemberInfo.GetCustomAttributes(typeof(ApiLocalNameAttribute), false).FirstOrDefault() is ApiLocalNameAttribute expectedName)
                 {
                     apiMember.GetLocalName().ShouldBe(expectedName.Value);
                 }

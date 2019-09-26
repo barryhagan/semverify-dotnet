@@ -54,9 +54,9 @@ namespace Semverify.ApiModel
             mods.AddFirstIf(new[]
             {
                 (condition: (access & MethodAttributes.Public) == MethodAttributes.Public, value: "public"),
-                (condition: (access & MethodAttributes.FamANDAssem) == MethodAttributes.FamANDAssem, value: "private protected"),
                 (condition: (access & MethodAttributes.FamORAssem) == MethodAttributes.FamORAssem, value: "protected internal"),
                 (condition: (access & MethodAttributes.Family) == MethodAttributes.Family, value: "protected"),
+                (condition: (access & MethodAttributes.FamANDAssem) == MethodAttributes.FamANDAssem, value: "private protected"),
             });
 
             if ((access & MethodAttributes.Final) != MethodAttributes.Final)

@@ -24,55 +24,55 @@ namespace Semverify.Tests.TestModel
 
         }
 
-        [Signature("public event System.EventHandler<Semverify.Tests.TestModel.NullableApi.ReturnArgs?> Semverify.Tests.TestModel.NullableApi.ReturnEvent;", Isolate = true)]
+        [ApiSignature("public event System.EventHandler<Semverify.Tests.TestModel.NullableApi.ReturnArgs?> Semverify.Tests.TestModel.NullableApi.ReturnEvent;", Isolate = true)]
         public event EventHandler<ReturnArgs?> ReturnEvent { add { } remove { } }
         
-        [Signature("protected delegate string? Semverify.Tests.TestModel.NullableApi.OnNullableReturn(object sender, Semverify.Tests.TestModel.NullableApi.ReturnArgs? args);")]
+        [ApiSignature("protected delegate string? Semverify.Tests.TestModel.NullableApi.OnNullableReturn(object sender, Semverify.Tests.TestModel.NullableApi.ReturnArgs? args);")]
         protected delegate string? OnNullableReturn(object sender, ReturnArgs? args);
 
         protected delegate string OnReturn(object sender, ReturnArgs? args);
 
         public ReturnType NonNullField = new ReturnType();
 
-        [Signature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableField;")]
+        [ApiSignature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableField;")]
         public ReturnType? NullableField;
 
         public ReturnType NonNullProperty { get; protected set; } = new ReturnType();
 
-        [Signature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableProperty { get; set; }")]
+        [ApiSignature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableProperty { get; set; }")]
         public ReturnType? NullableProperty { get; set; }
 
-        [Signature("public Semverify.Tests.TestModel.ReturnType[]?[]? Semverify.Tests.TestModel.NullableApi.NullableMethod() { }", Isolate = true)]
+        [ApiSignature("public Semverify.Tests.TestModel.ReturnType[]?[]? Semverify.Tests.TestModel.NullableApi.NullableMethod() { }", Isolate = true)]
         public ReturnType[]?[]? NullableMethod() { return null; }
 
-        [Signature("public System.Collections.Generic.IEnumerable<Semverify.Tests.TestModel.NullableApi.ReturnType?>? Semverify.Tests.TestModel.NullableApi.NullableEnumerable() { }")]
+        [ApiSignature("public System.Collections.Generic.IEnumerable<Semverify.Tests.TestModel.NullableApi.ReturnType?>? Semverify.Tests.TestModel.NullableApi.NullableEnumerable() { }")]
         public IEnumerable<ReturnType?>? NullableEnumerable() { return null; }
 
-        [Signature("public Semverify.Tests.TestModel.NullableApi.ReturnType Semverify.Tests.TestModel.NullableApi.NullableParamMethod(string? nullableParam, string nonNullParam, int? nullableValueType) { }")]
+        [ApiSignature("public Semverify.Tests.TestModel.NullableApi.ReturnType Semverify.Tests.TestModel.NullableApi.NullableParamMethod(string? nullableParam, string nonNullParam, int? nullableValueType) { }")]
         public ReturnType NullableParamMethod(string? nullableParam, string nonNullParam, int? nullableValueType) { return new ReturnType(); }
 
-        [Signature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableParamAndReturnMethod(string? nullableParam, string nonNullParam, int? nullableValueType) { }")]
+        [ApiSignature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableParamAndReturnMethod(string? nullableParam, string nonNullParam, int? nullableValueType) { }")]
         public ReturnType? NullableParamAndReturnMethod(string? nullableParam, string nonNullParam, int? nullableValueType) { return null; }
 
-        [Signature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableGenericMethod<T1, T2, T3>(T1? t1, T2 t2, T3? t3) where T1 : class where T2 : class where T3 : class { }")]
+        [ApiSignature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableGenericMethod<T1, T2, T3>(T1? t1, T2 t2, T3? t3) where T1 : class where T2 : class where T3 : class { }")]
         public ReturnType? NullableGenericMethod<T1, T2, T3>(T1? t1, T2 t2, T3? t3) where T1 : class where T2 : class where T3 : class { return null; }
 
-        [Signature("public System.Collections.Generic.Dictionary<System.Collections.Generic.List<string?>, string[]?> Semverify.Tests.TestModel.NullableApi.SkeetExample;")]
+        [ApiSignature("public System.Collections.Generic.Dictionary<System.Collections.Generic.List<string?>, string[]?> Semverify.Tests.TestModel.NullableApi.SkeetExample;")]
         public Dictionary<List<string?>, string[]?> SkeetExample = new Dictionary<List<string?>, string[]?>();
 
-        [Signature("public System.Collections.Generic.Dictionary<System.Collections.Generic.List<string?>, string?[]> Semverify.Tests.TestModel.NullableApi.SkeetExample2;")]
+        [ApiSignature("public System.Collections.Generic.Dictionary<System.Collections.Generic.List<string?>, string?[]> Semverify.Tests.TestModel.NullableApi.SkeetExample2;")]
         public Dictionary<List<string?>, string?[]> SkeetExample2 = new Dictionary<List<string?>, string?[]>();
 
-        [Signature("public System.Collections.Generic.Dictionary<System.Collections.Generic.List<string?>, string?[]?> Semverify.Tests.TestModel.NullableApi.SkeetExample3;")]
+        [ApiSignature("public System.Collections.Generic.Dictionary<System.Collections.Generic.List<string?>, string?[]?> Semverify.Tests.TestModel.NullableApi.SkeetExample3;")]
         public Dictionary<List<string?>, string?[]?> SkeetExample3 = new Dictionary<List<string?>, string?[]?>();
 
-        [Signature("public System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<int, int?>?>>? Semverify.Tests.TestModel.NullableApi.ComplicatedDictionary { get; set; }")]
+        [ApiSignature("public System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<int, int?>?>>? Semverify.Tests.TestModel.NullableApi.ComplicatedDictionary { get; set; }")]
         public Dictionary<string, Dictionary<string, Dictionary<int, int?>?>>? ComplicatedDictionary { get; set; }
 
-        [Signature("public System.Tuple<string, System.Collections.Generic.List<int?>, System.Collections.Generic.Dictionary<long, System.Collections.Generic.List<System.ValueTuple<string?, bool?>>>, string?, Semverify.Tests.TestModel.NullableApi.ReturnType, System.Collections.Concurrent.ConcurrentDictionary<string, Semverify.Tests.TestModel.NullableApi.ReturnType?>> Semverify.Tests.TestModel.NullableApi.WhyOnEarth { get; protected set; }")]
+        [ApiSignature("public System.Tuple<string, System.Collections.Generic.List<int?>, System.Collections.Generic.Dictionary<long, System.Collections.Generic.List<System.ValueTuple<string?, bool?>>>, string?, Semverify.Tests.TestModel.NullableApi.ReturnType, System.Collections.Concurrent.ConcurrentDictionary<string, Semverify.Tests.TestModel.NullableApi.ReturnType?>> Semverify.Tests.TestModel.NullableApi.WhyOnEarth { get; protected set; }")]
         public Tuple<string, List<int?>, Dictionary<long, List<(string?, bool?)>>, string?, ReturnType, ConcurrentDictionary<string, ReturnType?>> WhyOnEarth { get; protected set; }
 
-        [Signature("public override bool Semverify.Tests.TestModel.NullableApi.Equals(object? obj) { }")]
+        [ApiSignature("public override bool Semverify.Tests.TestModel.NullableApi.Equals(object? obj) { }")]
         public override bool Equals(object? obj)
         {
             return base.Equals(obj);
