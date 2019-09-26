@@ -11,26 +11,10 @@ namespace Semverify.Tests
     public class WriteApiTests
     {
         [Fact]
-        public void write_assembly_api()
-        {
-            var assembly = typeof(InheritanceApi).Assembly;
-            var module = new ApiModuleInfo(assembly.Modules.First());
-            File.WriteAllText(Path.Combine(Path.GetTempPath(), module.Name + ".api.txt"), module.FormatForApiOutput());
-        }
-
-        [Fact]
-        public void write_assembly_signatures()
-        {
-            var assembly = typeof(InheritanceApi).Assembly;
-            var module = new ApiModuleInfo(assembly.Modules.First());
-            File.WriteAllLines(Path.Combine(Path.GetTempPath(), module.Name + ".signatures.txt"), module.EnumerateAllMembers().Select(m => m.GetSignature()));
-        }
-
-        [Fact]
         public void signatures_match_expected_values()
         {
-            var api = new ApiTypeInfo(typeof(EventsApi));
-            var apiMembers = api.EnumerateMembers();
+            var api = new ApiModuleInfo(typeof(WriteApiTests).Assembly.Modules.First());
+            var apiMembers = api.EnumerateAllMembers();
 
             foreach (var apiMember in apiMembers)
             {
@@ -41,11 +25,28 @@ namespace Semverify.Tests
             }
         }
 
+        // Runs only the signature attributes with Isolate = true
+        // useful when setting up and debugging new tests.
+        [Fact]       
+        public void isolated_signatures_match_expected_values()
+        {
+            var api = new ApiModuleInfo(typeof(WriteApiTests).Assembly.Modules.First());
+            var apiMembers = api.EnumerateAllMembers();
+
+            foreach (var apiMember in apiMembers)
+            {
+                if (apiMember.MemberInfo.GetCustomAttributes(typeof(SignatureAttribute), false).FirstOrDefault() is SignatureAttribute expectedSignature && expectedSignature.Isolate)
+                {
+                    apiMember.GetSignature().ShouldBe(expectedSignature.Value);
+                }
+            }
+        }
+
         [Fact]
         public void local_names_match_expected_values()
         {
-            var api = new ApiTypeInfo(typeof(EventsApi));
-            var apiMembers = api.EnumerateMembers();
+            var api = new ApiModuleInfo(typeof(WriteApiTests).Assembly.Modules.First());
+            var apiMembers = api.EnumerateAllMembers();
 
             foreach (var apiMember in apiMembers)
             {

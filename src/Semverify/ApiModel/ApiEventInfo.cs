@@ -80,7 +80,8 @@ namespace Semverify.ApiModel
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            var eventType = addMethod.GetParameters().First().ParameterType.ResolveQualifiedName();
+            var eventParam = addMethod.GetParameters().First();
+            var eventType = eventParam.ParameterType.ResolveQualifiedName(eventParam.GetReferenceNullability(addMethod));
 
             return $"{modString}event {eventType} {GetFullName()}{GetAccessor()}";
         }

@@ -42,12 +42,12 @@ namespace Semverify
 
         public static string ResolveLocalName(this Type type, byte[] nullableAttribute = null, bool applyGenericModifiers = true)
         {
-            return ResolveDisplayName(type, nullableAttribute?.AsEnumerable().GetEnumerator(), false, applyGenericModifiers);
+            return ResolveDisplayName(type, (nullableAttribute ?? new byte[] { 0 }).AsEnumerable().GetEnumerator(), false, applyGenericModifiers);
         }
 
         public static string ResolveQualifiedName(this Type type, byte[] nullableAttribute = null, bool applyGenericModifiers = true)
         {
-            return ResolveDisplayName(type, nullableAttribute?.AsEnumerable().GetEnumerator(), applyGenericModifiers);
+            return ResolveDisplayName(type, (nullableAttribute ?? new byte[] { 0 }).AsEnumerable().GetEnumerator(), true, applyGenericModifiers);
         }
 
         private static string ResolveDisplayName(Type type, IEnumerator<byte> nullableEnumerator, bool withNamespace = true, bool applyGenericModifiers = true)
@@ -57,48 +57,77 @@ namespace Semverify
                 return null;
             }
 
-            if (nullableEnumerator == null)
-            {
-                nullableEnumerator = new byte[] { 0 }.AsEnumerable().GetEnumerator();
-            }
-
             var suffix = string.Empty;
-            var resolvedType = type;
-            var innerType = resolvedType.GetElementType();
-            while (innerType != null)
+
+            bool isNullableReferenceType(Type type)
             {
-                if (!resolvedType.IsByRef)
+                if (getUnderlyingNullable(type) != null)
                 {
-                    suffix = $"{resolvedType.Name.Substring(innerType.Name.Length)}{suffix}";
+                    return false;
                 }
 
-                //check if element is nullable reference type
-                if (!resolvedType.IsValueType || resolvedType.IsGenericType)
+                if (!type.IsValueType || type.IsGenericType)
                 {
-                    if (nullableEnumerator.MoveNext() && nullableEnumerator.Current == 2)
+                    if (!nullableEnumerator.MoveNext())
                     {
-                        suffix = $"{suffix}?";
+                        // Assume if we don't have enough nullable bytes to represent the type
+                        // that it used NullableAttribute(byte) instead of NullableAttribute(byte[])
+                        // because all members have the same nullability and could be condensed
+                        nullableEnumerator.Reset();
+                        nullableEnumerator.MoveNext();
+                    }
+                    return nullableEnumerator.Current == 2;
+                }
+
+                return false;
+            }
+
+            Type getUnderlyingNullable(Type maybeNullable)
+            {
+                // Nullable.GetUnderlyingType() does not work correctly in MetadataLoadContext
+                // and will return false for nullable types probably due to using Object.ReferenceEquals
+                // so we will string match on the FullName instead.
+                if (maybeNullable.IsGenericType && !maybeNullable.IsGenericTypeDefinition)
+                {
+                    var generic = maybeNullable.GetGenericTypeDefinition();
+                    if (generic.FullName == typeof(Nullable<>).FullName)
+                    {
+                        return maybeNullable.GetGenericArguments()[0];
                     }
                 }
 
-                resolvedType = innerType;
-                innerType = innerType.GetElementType();
+                return null;
             }
 
-            //nullable value types
-            var underlyingNullable = Nullable.GetUnderlyingType(resolvedType);
-            if (underlyingNullable != null)
+            var resolvedType = type;
+            var elementType = resolvedType.GetElementType();
+            var underlyingNullable = getUnderlyingNullable(resolvedType);
+
+            if (isNullableReferenceType(resolvedType))
             {
-                resolvedType = underlyingNullable;
                 suffix = $"?{suffix}";
             }
 
-            //nullable reference types
-            if (!resolvedType.IsValueType || resolvedType.IsGenericType)
+            while (elementType != null || underlyingNullable != null)
             {
-                if (nullableEnumerator.MoveNext() && nullableEnumerator.Current == 2)
+                if (elementType != null)
+                {
+                    if (!resolvedType.IsByRef)
+                    {
+                        suffix = $"{resolvedType.Name.Substring(elementType.Name.Length)}{suffix}";
+                    }
+                    if (isNullableReferenceType(resolvedType))
+                    {
+                        suffix = $"?{suffix}";
+                    }
+                    resolvedType = elementType;
+                    elementType = elementType.GetElementType();
+                }
+                else if (underlyingNullable != null)
                 {
                     suffix = $"?{suffix}";
+                    resolvedType = underlyingNullable;
+                    underlyingNullable = getUnderlyingNullable(underlyingNullable);
                 }
             }
 
@@ -128,12 +157,12 @@ namespace Semverify
             var prefix = withNamespace && string.IsNullOrWhiteSpace(alias) ? $"{type.Namespace}." : "";
             if (type.IsNested && withNamespace)
             {
-                prefix = $"{ResolveDisplayName(type.DeclaringType, null, withNamespace, applyGenericModifiers)}.";
+                prefix = $"{ResolveDisplayName(type.DeclaringType, new byte[] { 0 }.AsEnumerable().GetEnumerator(), withNamespace, applyGenericModifiers)}.";
             }
 
-            if (type.GetGenericArguments().Any())
+            if (resolvedType.GetGenericArguments().Any())
             {
-                var genericArgs = type.GetGenericArguments().Select(a => ResolveDisplayName(a, nullableEnumerator, applyGenericModifiers: applyGenericModifiers));
+                var genericArgs = resolvedType.GetGenericArguments().Select(a => ResolveDisplayName(a, nullableEnumerator, withNamespace, applyGenericModifiers: applyGenericModifiers));
                 return $"{prefix}{GenericParamsRegex.Replace($"{typeName}", $"<{string.Join(", ", genericArgs)}>")}";
             }
 
