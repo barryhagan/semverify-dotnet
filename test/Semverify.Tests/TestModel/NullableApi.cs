@@ -27,14 +27,19 @@ namespace Semverify.Tests.TestModel
         [Signature("public event System.EventHandler<Semverify.Tests.TestModel.NullableApi.ReturnArgs?> Semverify.Tests.TestModel.NullableApi.ReturnEvent;", Isolate = true)]
         public event EventHandler<ReturnArgs?> ReturnEvent { add { } remove { } }
         
+        [Signature("protected delegate string? Semverify.Tests.TestModel.NullableApi.OnNullableReturn(object sender, Semverify.Tests.TestModel.NullableApi.ReturnArgs? args);")]
         protected delegate string? OnNullableReturn(object sender, ReturnArgs? args);
+
         protected delegate string OnReturn(object sender, ReturnArgs? args);
 
         public ReturnType NonNullField = new ReturnType();
+
+        [Signature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableField;")]
         public ReturnType? NullableField;
 
         public ReturnType NonNullProperty { get; protected set; } = new ReturnType();
 
+        [Signature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableProperty { get; set; }")]
         public ReturnType? NullableProperty { get; set; }
 
         [Signature("public Semverify.Tests.TestModel.ReturnType[]?[]? Semverify.Tests.TestModel.NullableApi.NullableMethod() { }", Isolate = true)]
@@ -67,11 +72,12 @@ namespace Semverify.Tests.TestModel
         [Signature("public System.Tuple<string, System.Collections.Generic.List<int?>, System.Collections.Generic.Dictionary<long, System.Collections.Generic.List<System.ValueTuple<string?, bool?>>>, string?, Semverify.Tests.TestModel.NullableApi.ReturnType, System.Collections.Concurrent.ConcurrentDictionary<string, Semverify.Tests.TestModel.NullableApi.ReturnType?>> Semverify.Tests.TestModel.NullableApi.WhyOnEarth { get; protected set; }")]
         public Tuple<string, List<int?>, Dictionary<long, List<(string?, bool?)>>, string?, ReturnType, ConcurrentDictionary<string, ReturnType?>> WhyOnEarth { get; protected set; }
 
+        [Signature("public override bool Semverify.Tests.TestModel.NullableApi.Equals(object? obj) { }")]
         public override bool Equals(object? obj)
         {
             return base.Equals(obj);
         }
-
+        
         public override int GetHashCode()
         {
             return base.GetHashCode();  

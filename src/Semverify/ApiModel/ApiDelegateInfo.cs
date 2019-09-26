@@ -18,7 +18,7 @@ namespace Semverify.ApiModel
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            var parameters = ResolveParameters(invokeMethod.GetParameters());
+            var parameters = ResolveParameters(invokeMethod.GetParameters(), context: invokeMethod);
             var parameterString = string.Join(", ", parameters);
 
             var returnType = invokeMethod.ReturnType.ResolveQualifiedName(ApiMethodInfo.GetReturnTypeNullability(invokeMethod));
@@ -49,7 +49,7 @@ namespace Semverify.ApiModel
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            var parameters = ResolveParameters(invokeMethod.GetParameters());
+            var parameters = ResolveParameters(invokeMethod.GetParameters(), context: invokeMethod);
             var parameterString = string.Join(", ", parameters);
 
             var returnType = invokeMethod.ReturnType.ResolveQualifiedName(ApiMethodInfo.GetReturnTypeNullability(invokeMethod));

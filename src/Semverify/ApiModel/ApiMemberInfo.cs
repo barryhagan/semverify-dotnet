@@ -66,7 +66,7 @@ namespace Semverify.ApiModel
             return templateConstraints;
         }
 
-        protected virtual IList<string> ResolveParameters(ParameterInfo[] parameters, bool applyGenericModifiers = true)
+        protected virtual IList<string> ResolveParameters(ParameterInfo[] parameters, bool applyGenericModifiers = true, MemberInfo context = null)
         {
             var paramList = new List<string>();
             foreach (var param in parameters)
@@ -99,7 +99,7 @@ namespace Semverify.ApiModel
                     }
                 }
 
-                paramList.Add($"{modString}{param.ParameterType.ResolveQualifiedName(param.GetReferenceNullability(MemberInfo), applyGenericModifiers)} {param.Name}{defaultValue}");
+                paramList.Add($"{modString}{param.ParameterType.ResolveQualifiedName(param.GetReferenceNullability(context ?? MemberInfo), applyGenericModifiers)} {param.Name}{defaultValue}");
             }
             return paramList;
         }
