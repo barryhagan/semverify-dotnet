@@ -24,7 +24,7 @@ namespace Semverify.Tests.TestModel
 
         }
 
-        [ApiSignature("public event System.EventHandler<Semverify.Tests.TestModel.NullableApi.ReturnArgs?> Semverify.Tests.TestModel.NullableApi.ReturnEvent;", Isolate = true)]
+        [ApiSignature("public event System.EventHandler<Semverify.Tests.TestModel.NullableApi.ReturnArgs?> Semverify.Tests.TestModel.NullableApi.ReturnEvent;")]
         public event EventHandler<ReturnArgs?> ReturnEvent { add { } remove { } }
         
         [ApiSignature("protected delegate string? Semverify.Tests.TestModel.NullableApi.OnNullableReturn(object sender, Semverify.Tests.TestModel.NullableApi.ReturnArgs? args);")]
@@ -42,7 +42,7 @@ namespace Semverify.Tests.TestModel
         [ApiSignature("public Semverify.Tests.TestModel.NullableApi.ReturnType? Semverify.Tests.TestModel.NullableApi.NullableProperty { get; set; }")]
         public ReturnType? NullableProperty { get; set; }
 
-        [ApiSignature("public Semverify.Tests.TestModel.ReturnType[]?[]? Semverify.Tests.TestModel.NullableApi.NullableMethod() { }", Isolate = true)]
+        [ApiSignature("public Semverify.Tests.TestModel.ReturnType[]?[]? Semverify.Tests.TestModel.NullableApi.NullableMethod() { }")]
         public ReturnType[]?[]? NullableMethod() { return null; }
 
         [ApiSignature("public System.Collections.Generic.IEnumerable<Semverify.Tests.TestModel.NullableApi.ReturnType?>? Semverify.Tests.TestModel.NullableApi.NullableEnumerable() { }")]

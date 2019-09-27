@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Semverify.ApiModel
@@ -57,7 +58,9 @@ namespace Semverify.ApiModel
                 return mods;
             }
 
-            var access = (GetVisibleGetter()?.Attributes ?? 0) | (GetVisibleSetter()?.Attributes ?? 0);
+            var getter = GetVisibleGetter();
+
+            var access = (getter?.Attributes ?? 0) | (GetVisibleSetter()?.Attributes ?? 0);
 
             mods.AddFirstIf(new[] {
                     (condition: (access & MethodAttributes.Public) == MethodAttributes.Public, value: "public"),
@@ -65,6 +68,8 @@ namespace Semverify.ApiModel
                     (condition: (access & MethodAttributes.Family) == MethodAttributes.Family, value: "protected"),
                     (condition: (access & MethodAttributes.FamANDAssem) == MethodAttributes.FamANDAssem, value: "private protected"),
                 });
+
+            mods.AddIf(getter?.HasAttribute(typeof(IsReadOnlyAttribute)) ?? false, "readonly");
 
             if ((access & MethodAttributes.Final) != MethodAttributes.Final)
             {

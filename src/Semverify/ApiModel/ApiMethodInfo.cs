@@ -121,6 +121,8 @@ namespace Semverify.ApiModel
                 (condition: MethodInfo.IsPublic, value: "public"),
             });
 
+            mods.AddIf(MethodInfo.HasAttribute(typeof(IsReadOnlyAttribute)), "readonly");
+
             if (!MethodInfo.IsFinal)
             {
                 mods.AddFirstIf(new[]
