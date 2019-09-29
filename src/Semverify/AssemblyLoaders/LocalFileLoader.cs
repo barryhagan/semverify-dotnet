@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Semverify.AssemblyLoaders
@@ -11,17 +10,27 @@ namespace Semverify.AssemblyLoaders
     {
         public override Task<AssemblyReflectionInput> LoadAssembly(AssemblyLoaderOptions loadOptions)
         {
-            var dependencies = loadOptions.AssemblyDependencyPaths.SelectMany(p => EnumerateAssemblies(p)).ToList();
+            var dependencies = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            if (loadOptions.AssemblyDependencyPaths.All(p => string.IsNullOrWhiteSpace(p)))
+            foreach (var frameworkAssembly in loadOptions.FrameworkAssemblies)
             {
-                dependencies.AddRange(EnumerateAssemblies(Path.GetDirectoryName(loadOptions.AssemblyName)));
+                AddUniqueAssemblies(dependencies, frameworkAssembly);
+            }
+
+            foreach (var dependencyPath in loadOptions.AssemblyDependencyPaths)
+            {
+                AddUniqueAssemblies(dependencies, dependencyPath);
+            }
+
+            if (!loadOptions.AssemblyDependencyPaths.Any())
+            {
+                AddUniqueAssemblies(dependencies, Path.GetDirectoryName(loadOptions.AssemblyName));
             }
 
             var assemblyInput = new AssemblyReflectionInput
             {
                 AssemblyPath = loadOptions.AssemblyName,
-                AssemblyDependencies = dependencies.Concat(loadOptions.FrameworkAssemblies).Distinct().ToArray()
+                AssemblyDependencies = dependencies.Values.ToArray()
             };
 
             return Task.FromResult(assemblyInput);

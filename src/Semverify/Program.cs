@@ -7,6 +7,7 @@ using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -65,23 +66,39 @@ namespace Semverify
                     {
                         Arity = ArgumentArity.ZeroOrOne
                     }
+                },
+                new Option(new string[] {"--use-dependency-changes" }, "Use dependency semver changes to calculate the assembly change type")
+                {
+                    Argument = new Argument<bool>
+                    {
+                        Arity = ArgumentArity.ZeroOrOne
+                    }
                 }
             };
 
-            command.Handler = CommandHandler.Create<string, string, List<DirectoryInfo>, List<DirectoryInfo>, List<DirectoryInfo>, DirectoryInfo, SemverChangeType?>(RunCompare);
+            command.Handler = CommandHandler.Create(typeof(Program).GetMethod(nameof(RunCompare), BindingFlags.NonPublic | BindingFlags.Static), null);
             return await command.InvokeAsync(args);
         }
 
-        static async Task<int> RunCompare(string assembly1, string assembly2, List<DirectoryInfo> a1deps, List<DirectoryInfo> a2deps, List<DirectoryInfo> deps, DirectoryInfo outputApi, SemverChangeType? expectedChangeType)
+        static async Task<int> RunCompare(
+            string assembly1,
+            string assembly2,
+            List<DirectoryInfo> a1deps,
+            List<DirectoryInfo> a2deps,
+            List<DirectoryInfo> deps,
+            DirectoryInfo outputApi,
+            SemverChangeType? expectedChangeType,
+            bool useDependencyChanges)
         {
             var platformDelimiter = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':';
             var frameworkAssemblies = (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string).Split(platformDelimiter);
+            var commonDeps = deps?.Select(d => d?.FullName).ToList() ?? new List<string>();
 
             var assembly1Loader = AssemblyLoaderFactory.ResolveLoader(assembly1);
             var assembly1Options = await assembly1Loader.LoadAssembly(new AssemblyLoaderOptions
             {
                 AssemblyName = assembly1,
-                AssemblyDependencyPaths = a1deps?.Select(d => d?.FullName).ToArray() ?? new string[0],
+                AssemblyDependencyPaths = commonDeps.Concat(a1deps?.Select(d => d?.FullName) ?? new List<string>()).ToArray(),
                 FrameworkAssemblies = frameworkAssemblies
             });
 
@@ -94,11 +111,11 @@ namespace Semverify
             var assembly2Options = await assembly2Loader.LoadAssembly(new AssemblyLoaderOptions
             {
                 AssemblyName = assembly2,
-                AssemblyDependencyPaths = a2deps?.Select(d => d?.FullName).ToArray() ?? new string[0],
+                AssemblyDependencyPaths = commonDeps.Concat(a2deps?.Select(d => d?.FullName) ?? new List<string>()).ToArray(),
                 FrameworkAssemblies = frameworkAssemblies
             });
 
-            return SemverComparer.Compare(assembly1Options, assembly2Options, outputApi?.FullName, expectedChangeType);
+            return SemverComparer.Compare(assembly1Options, assembly2Options, outputApi?.FullName, expectedChangeType, useDependencyChanges);
         }
     }
 }

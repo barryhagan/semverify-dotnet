@@ -16,8 +16,7 @@ namespace Semverify.Tests.TestModel
         [ApiSignature("public readonly double Semverify.Tests.TestModel.Point.Distance { get; }")]
         public readonly double Distance => Math.Sqrt(X * X + Y * Y);
 
-        [ApiSignature("public readonly override string Semverify.Tests.TestModel.Point.ToString()")]
-        public readonly override string ToString() =>
-            $"({X}, {Y}) is {Distance} from the origin";
+        [ApiSignature("public readonly override string Semverify.Tests.TestModel.Point.ToString() { }")]
+        public readonly override string ToString() => $"({X}, {Y}) is {Distance} from the origin";
     }
 }

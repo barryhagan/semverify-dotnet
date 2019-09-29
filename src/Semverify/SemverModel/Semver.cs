@@ -58,7 +58,7 @@ namespace Semverify.SemverModel
                 Major = version.Major,
                 Minor = version.Minor,
                 Patch = version.Build,
-                Prerelease = version.Revision == 0 ? string.Empty : version.Revision.ToString()
+                BuildMetadata = version.Revision == 0 ? string.Empty : version.Revision.ToString()
             };
             return true;
         }
@@ -88,6 +88,24 @@ namespace Semverify.SemverModel
 
             semver = null;
             return false;
+        }
+
+        public SemverChangeType GetChangeType(Semver other)
+        {
+            if (other.Major != Major)
+            {
+                return SemverChangeType.Major;
+            }
+            if (other.Minor != Minor)
+            {
+                return SemverChangeType.Minor;
+            }
+            if (other.Patch != Patch || other.BuildMetadata != BuildMetadata)
+            {
+                return SemverChangeType.Patch;
+            }
+
+            return SemverChangeType.None;
         }
 
         public int CompareTo([AllowNull] Semver other)

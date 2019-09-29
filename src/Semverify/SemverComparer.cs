@@ -30,27 +30,29 @@ namespace Semverify
             return 0;
         }
 
-        public static int Compare(AssemblyReflectionInput assembly1Input, AssemblyReflectionInput assembly2Input, string outputApiPath = null, SemverChangeType? expectedChangeType = null)
+        public static int Compare(AssemblyReflectionInput assembly1Input, AssemblyReflectionInput assembly2Input, string outputApiPath = null, SemverChangeType? expectedChangeType = null, bool useDependencyChanges = false)
         {
-            var assembly1Paths = new[] { assembly1Input.AssemblyPath }.Concat(assembly1Input.AssemblyDependencies).Distinct();
-            var assembly2Paths = new[] { assembly2Input.AssemblyPath }.Concat(assembly2Input.AssemblyDependencies).Distinct();
-
-            using (var loadContext1 = new MetadataLoadContext(new PathAssemblyResolver(assembly1Paths)))
-            using (var loadContext2 = new MetadataLoadContext(new PathAssemblyResolver(assembly2Paths)))
+            return CompareAction(assembly1Input, assembly2Input, (assembly1, assembly2) =>
             {
-                var assembly1 = loadContext1.LoadFromAssemblyPath(assembly1Input.AssemblyPath);
-                var assembly2 = loadContext2.LoadFromAssemblyPath(assembly2Input.AssemblyPath);
-
                 var assembly1Semver = GetSemanticVersion(assembly1);
                 var assembly2Semver = GetSemanticVersion(assembly2);
 
                 var assembly1Modules = ApiModuleInfo.GetModulesForAssembly(assembly1);
                 var assembly2Modules = ApiModuleInfo.GetModulesForAssembly(assembly2);
 
+                var compareResult = ComparePublicApi(assembly1Modules, assembly2Modules);
+
+                var dependencyCompareResult = CompareDependencies(assembly1, assembly2);
+
+                if (useDependencyChanges && dependencyCompareResult > compareResult)
+                {
+                    compareResult = dependencyCompareResult;
+                }
+
                 if (!string.IsNullOrWhiteSpace(outputApiPath) && Directory.Exists(outputApiPath))
                 {
-                    var path1 = GetSafeApiFileName(outputApiPath, assembly1Input.AssemblyPath, assembly1Semver, ".api.txt");
-                    var path2 = GetSafeApiFileName(outputApiPath, assembly2Input.AssemblyPath, assembly2Semver, ".api.txt");
+                    var path1 = GetSafeApiFileName(outputApiPath, assembly1.GetName().Name, assembly1Semver, ".api.txt");
+                    var path2 = GetSafeApiFileName(outputApiPath, assembly2.GetName().Name, assembly2Semver, ".api.txt");
                     if (path2.Equals(path1, StringComparison.OrdinalIgnoreCase))
                     {
                         path1 = Path.Join(Path.GetDirectoryName(path1), Path.GetFileNameWithoutExtension(path1), "(1)", Path.GetExtension(path1));
@@ -60,72 +62,87 @@ namespace Semverify
                     WriteApiToFile(assembly2Modules.Values, path2);
                 }
 
-                if (!assembly1Modules.Keys.OrderBy(k => k).SequenceEqual(assembly2Modules.Keys.OrderBy(k => k)))
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("The assemblies have different modules that will not be compared.");
-                }
-
-                var compareResult = Compare(assembly1Modules, assembly2Modules);
-
-                var calculatedSemver = new Semver
-                {
-                    Major = assembly1Semver.Major ?? 0,
-                    Minor = assembly1Semver.Minor ?? 0,
-                    Patch = assembly1Semver.Patch ?? 0
-                };
-
-                if (assembly1Semver.IsPrerelease)
-                {
-                    calculatedSemver.Prerelease = assembly1Semver.Prerelease + ".NEXT";
-                }
-                else
-                {
-                    switch (compareResult)
-                    {
-                        case SemverChangeType.Major:
-                            calculatedSemver.Major++;
-                            calculatedSemver.Minor = 0;
-                            calculatedSemver.Patch = 0;
-                            break;
-                        case SemverChangeType.Minor:
-                            calculatedSemver.Minor++;
-                            calculatedSemver.Patch = 0;
-                            break;
-                        case SemverChangeType.Patch:
-                        case SemverChangeType.None:
-                            calculatedSemver.Patch++;
-                            break;
-                    }
-                }
+                var calculatedSemver = CalculateSemver(assembly1Semver, compareResult);
 
                 if (expectedChangeType.HasValue)
                 {
                     if (expectedChangeType >= compareResult || assembly1Semver.IsPrerelease)
                     {
-                        Console.ForegroundColor = ConsoleColor.Green;                        
-                        Console.WriteLine($"Valid [{expectedChangeType}] semver change ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}). Calculated as [{compareResult}] ({calculatedSemver})");
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine();
+                        Console.WriteLine($"Valid [{expectedChangeType}] semver change for {Path.GetFileNameWithoutExtension(assembly1.GetName().Name)} ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}). Calculated as [{compareResult}] ({calculatedSemver})");
                         Console.ResetColor();
                         return 0;
                     }
                     else
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"Changes from ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}) do not meet semver guidelines for a [{expectedChangeType}] change.  Calculated as [{compareResult}] ({calculatedSemver})");
+                        Console.WriteLine();
+                        Console.WriteLine($"Changes for {Path.GetFileNameWithoutExtension(assembly1.GetName().Name)} ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}) do not meet semver guidelines for a [{expectedChangeType}] change.  Calculated as [{compareResult}] ({calculatedSemver})");
                         Console.ResetColor();
                         return 1;
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"The calculated semver for ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}) was [{compareResult}] ({calculatedSemver})");
+                    Console.WriteLine();
+                    Console.WriteLine($"The calculated semver for {Path.GetFileNameWithoutExtension(assembly1.GetName().Name)} ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}) is [{compareResult}] ({calculatedSemver})");
                     return 0;
                 }
-            }
+            });
         }
 
-        private static SemverChangeType Compare(IDictionary<string, ApiModuleInfo> assembly1Modules, IDictionary<string, ApiModuleInfo> assembly2Modules)
+        private static int CompareAction(AssemblyReflectionInput assembly1Input, AssemblyReflectionInput assembly2Input, Func<Assembly, Assembly, int> compareFunc)
         {
+            var assembly1Paths = new[] { assembly1Input.AssemblyPath }.Concat(assembly1Input.AssemblyDependencies).Distinct();
+            var assembly2Paths = new[] { assembly2Input.AssemblyPath }.Concat(assembly2Input.AssemblyDependencies).Distinct();
+
+            using var loadContext1 = new MetadataLoadContext(new PathAssemblyResolver(assembly1Paths));
+            using var loadContext2 = new MetadataLoadContext(new PathAssemblyResolver(assembly2Paths));
+
+            var assembly1 = loadContext1.LoadFromAssemblyPath(assembly1Input.AssemblyPath);
+            var assembly2 = loadContext2.LoadFromAssemblyPath(assembly2Input.AssemblyPath);
+
+            return compareFunc(assembly1, assembly2);
+        }
+
+        private static SemverChangeType CompareDependencies(Assembly assembly1, Assembly assembly2)
+        {
+            var assembly1Dependencies = assembly1.GetReferencedAssemblies().ToDictionary(a => a.Name, a => a.Version);
+            var assembly2Dependencies = assembly2.GetReferencedAssemblies().ToDictionary(a => a.Name, a => a.Version);
+
+            var calculatedChange = SemverChangeType.None;
+            foreach (var dependency in assembly2Dependencies)
+            {
+                if (!assembly1Dependencies.TryGetValue(dependency.Key, out var previousVersion))
+                {
+                    Console.WriteLine($"New dependency added: {dependency.Key} {dependency.Value}");
+                }
+                else if (previousVersion != dependency.Value)
+                {
+                    var change = SemverChangeType.None;
+                    if (Semver.TryParse(previousVersion, out var previousSemver) && Semver.TryParse(dependency.Value, out var newSemver))
+                    {
+                        change = previousSemver.GetChangeType(newSemver);
+                        if (change > calculatedChange)
+                        {
+                            calculatedChange = change;
+                        }
+                    }
+                    Console.WriteLine($"Dependency version change: {dependency.Key} ({previousVersion} => {dependency.Value}) [{change}]");
+                }
+            }
+            return calculatedChange;
+        }
+
+        private static SemverChangeType ComparePublicApi(IDictionary<string, ApiModuleInfo> assembly1Modules, IDictionary<string, ApiModuleInfo> assembly2Modules)
+        {
+            if (!assembly1Modules.Keys.OrderBy(k => k).SequenceEqual(assembly2Modules.Keys.OrderBy(k => k)))
+            {
+                Console.WriteLine();
+                Console.WriteLine("The assemblies have different modules that will not be compared.");
+            }
+
             var changes = new List<(ApiChangeType changeType, ApiMemberInfo member)>();
 
             foreach (var (modName, assembly1Module) in assembly1Modules)
@@ -211,6 +228,42 @@ namespace Semverify
                  : SemverChangeType.Patch;
            
             return semverChangeType;
+        }
+
+        private static Semver CalculateSemver(Semver current, SemverChangeType compareResult)
+        {
+            var calculatedSemver = new Semver
+            {
+                Major = current.Major ?? 0,
+                Minor = current.Minor ?? 0,
+                Patch = current.Patch ?? 0
+            };
+
+            if (current.IsPrerelease)
+            {
+                calculatedSemver.Prerelease = current.Prerelease + ".NEXT";
+            }
+            else
+            {
+                switch (compareResult)
+                {
+                    case SemverChangeType.Major:
+                        calculatedSemver.Major++;
+                        calculatedSemver.Minor = 0;
+                        calculatedSemver.Patch = 0;
+                        break;
+                    case SemverChangeType.Minor:
+                        calculatedSemver.Minor++;
+                        calculatedSemver.Patch = 0;
+                        break;
+                    case SemverChangeType.Patch:
+                    case SemverChangeType.None:
+                        calculatedSemver.Patch++;
+                        break;
+                }
+            }
+
+            return calculatedSemver;
         }
 
         private static void CompareApiTypeInfos(ApiTypeInfo assembly1Type, ApiTypeInfo assembly2Type, IList<(ApiChangeType change, ApiMemberInfo member)> changes)

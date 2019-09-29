@@ -5,6 +5,7 @@ using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -79,13 +80,24 @@ namespace Semverify.AssemblyLoaders
 
             if (assemblyNames.Count == 1)
             {
-                var dependencies = loadOptions.AssemblyDependencyPaths.SelectMany(p => EnumerateAssemblies(p)).ToList();
-                dependencies.AddRange(EnumerateAssemblies(Path.Combine(projectDirectory, "Assemblies")));
+                var dependencies = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var frameworkAssembly in loadOptions.FrameworkAssemblies)
+                {
+                    AddUniqueAssemblies(dependencies, frameworkAssembly);
+                }
+
+                AddUniqueAssemblies(dependencies, Path.Combine(projectDirectory, "Assemblies"));
+
+                foreach (var dependencyPath in loadOptions.AssemblyDependencyPaths)
+                {
+                    AddUniqueAssemblies(dependencies, dependencyPath);
+                }
 
                 var assemblyInput = new AssemblyReflectionInput
                 {
                     AssemblyPath = Path.Combine(projectDirectory, "Assemblies", assemblyNames.First()),
-                    AssemblyDependencies = dependencies.Concat(loadOptions.FrameworkAssemblies).Distinct().ToArray()
+                    AssemblyDependencies = dependencies.Values.ToArray()
                 };
 
                 return assemblyInput;
