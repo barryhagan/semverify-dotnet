@@ -31,7 +31,7 @@ namespace Semverify.ApiModel
 
         public override string GetFullName()
         {
-            return $"{propertyInfo.DeclaringType.ResolveQualifiedName()}.{propertyInfo.Name}";
+            return $"{propertyInfo.DeclaringType.ResolveQualifiedName()}.{GetLocalName()}";
         }
 
         public override string GetLocalName()
@@ -69,7 +69,7 @@ namespace Semverify.ApiModel
                     (condition: (access & MethodAttributes.FamANDAssem) == MethodAttributes.FamANDAssem, value: "private protected"),
                 });
 
-            mods.AddIf(getter?.HasAttribute(typeof(IsReadOnlyAttribute)) ?? false, "readonly");
+            mods.AddIf((getter?.HasAttribute(typeof(IsReadOnlyAttribute)) ?? false) && !(getter?.HasAttribute(typeof(CompilerGeneratedAttribute)) ?? false), "readonly");
 
             if ((access & MethodAttributes.Final) != MethodAttributes.Final)
             {
