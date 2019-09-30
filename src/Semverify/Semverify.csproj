@@ -12,7 +12,7 @@
     <ToolCommandName>semverify</ToolCommandName>
     <PackageId>semverify-dotnet-tool</PackageId>
     <PackageDescription>A semantic version verification tool for dotnet assemblies</PackageDescription>
-    <Version>0.1.5-alpha01</Version>
+    <Version>0.1.6-alpha01</Version>
     <Authors>Barry Hagan</Authors>
     <Description>A semantic version verification tool for dotnet assemblies</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

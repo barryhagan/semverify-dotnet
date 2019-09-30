@@ -115,10 +115,11 @@ namespace Semverify
                     if (!resolvedType.IsByRef)
                     {
                         suffix = $"{resolvedType.Name.Substring(elementType.Name.Length)}{suffix}";
-                    }
-                    if (isNullableReferenceType(resolvedType))
-                    {
-                        suffix = $"?{suffix}";
+
+                        if (isNullableReferenceType(resolvedType))
+                        {
+                            suffix = $"?{suffix}";
+                        }
                     }
                     resolvedType = elementType;
                     elementType = elementType.GetElementType();
@@ -154,11 +155,22 @@ namespace Semverify
                 return $"{typeName}";
             }
 
-            var prefix = withNamespace && string.IsNullOrWhiteSpace(alias) ? $"{type.Namespace}." : "";
+            var prefix = string.Empty;
 
-            if (type.IsNested && withNamespace)
+            if (withNamespace)
             {
-                prefix = $"{ResolveDisplayName(type.DeclaringType, new byte[] { 0 }.AsEnumerable().GetEnumerator(), withNamespace, applyGenericModifiers)}.";
+                if (type.IsNested)
+                {
+                    prefix = $"{ResolveDisplayName(type.DeclaringType, new byte[] { 0 }.AsEnumerable().GetEnumerator(), withNamespace, applyGenericModifiers)}.";
+                }
+                else if (type.IsByRef && (resolvedType?.IsNested ?? false))
+                {
+                    prefix = $"{ResolveDisplayName(resolvedType.DeclaringType, new byte[] { 0 }.AsEnumerable().GetEnumerator(), withNamespace, applyGenericModifiers)}.";
+                }
+                else if (string.IsNullOrWhiteSpace(alias))
+                {
+                    prefix = $"{type.Namespace}.";
+                }
             }
 
             if (resolvedType.GetGenericArguments().Any())

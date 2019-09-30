@@ -72,6 +72,9 @@ namespace Semverify.Tests.TestModel
         [ApiSignature("public System.Tuple<string, System.Collections.Generic.List<int?>, System.Collections.Generic.Dictionary<long, System.Collections.Generic.List<System.ValueTuple<string?, bool?>>>, string?, Semverify.Tests.TestModel.NullableApi.ReturnType, System.Collections.Concurrent.ConcurrentDictionary<string, Semverify.Tests.TestModel.NullableApi.ReturnType?>> Semverify.Tests.TestModel.NullableApi.WhyOnEarth { get; protected set; }")]
         public Tuple<string, List<int?>, Dictionary<long, List<(string?, bool?)>>, string?, ReturnType, ConcurrentDictionary<string, ReturnType?>> WhyOnEarth { get; protected set; }
 
+        [ApiSignature("public bool Semverify.Tests.TestModel.NullableApi.ByRefNullableReferenceParam(Semverify.Tests.TestModel.NullableApi.ReturnType rt1, ref Semverify.Tests.TestModel.NullableApi.ReturnType? rt2, Semverify.Tests.TestModel.NullableApi.ReturnType rt3, Semverify.Tests.TestModel.NullableApi.ReturnType? rt4, out Semverify.Tests.TestModel.NullableApi.ReturnType? rt5, Semverify.Tests.TestModel.NullableApi.ReturnType rt6) { }")]
+        public bool ByRefNullableReferenceParam(ReturnType rt1, ref ReturnType? rt2, ReturnType rt3, ReturnType? rt4, out ReturnType? rt5, ReturnType rt6) { rt5 = null; return false; }
+
         [ApiSignature("public override bool Semverify.Tests.TestModel.NullableApi.Equals(object? obj) { }")]
         public override bool Equals(object? obj)
         {
