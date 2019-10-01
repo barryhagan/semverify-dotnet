@@ -86,7 +86,12 @@ namespace Semverify.ApiModel
 
         public override string GetFullName()
         {
-            return $"{MethodInfo.DeclaringType.ResolveQualifiedName()}.{MethodInfo.Name}{FormatGenericArgs()}";
+            var extensionMethod = MethodInfo.HasAttribute(typeof(ExtensionAttribute)) ? "this " : "";
+
+            var parameters = GetParameters();
+            var parameterString = string.Join(", ", parameters);
+
+            return $"{MethodInfo.DeclaringType.ResolveQualifiedName()}.{MethodInfo.Name}{FormatGenericArgs()}({extensionMethod}{parameterString})";
         }
 
         public override string GetLocalName()
@@ -152,15 +157,10 @@ namespace Semverify.ApiModel
             var constraints = ResolveConstraints(MethodInfo.GetGenericArguments());
             var constraintString = constraints.Any() ? $" {string.Join(" ", constraints)}" : "";
 
-            var extensionMethod = MethodInfo.HasAttribute(typeof(ExtensionAttribute)) ? "this " : "";
-
-            var parameters = GetParameters();
-            var parameterString = string.Join(", ", parameters);
-
             var accessor = GetAccessor();
             var accessorString = accessor.Length > 0 ? $" {accessor}" : ";";
 
-            return $"{modString}{MethodInfo.ReturnType.ResolveQualifiedName(GetReturnTypeNullability(MethodInfo), applyGenericModifiers: false)} {GetFullName()}({extensionMethod}{parameterString}){constraintString}{accessorString}";
+            return $"{modString}{MethodInfo.ReturnType.ResolveQualifiedName(GetReturnTypeNullability(MethodInfo), applyGenericModifiers: false)} {GetFullName()}{constraintString}{accessorString}";
         }
 
         protected virtual string FormatGenericArgs()

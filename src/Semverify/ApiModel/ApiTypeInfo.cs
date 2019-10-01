@@ -15,7 +15,7 @@ namespace Semverify.ApiModel
 
         protected readonly TypeInfo TypeInfo;
 
-        public string Namespace { get => TypeInfo.Namespace; }
+        public override string Namespace { get => TypeInfo.Namespace; }
 
         public ApiTypeInfo(MemberInfo memberInfo) : base(memberInfo)
         {

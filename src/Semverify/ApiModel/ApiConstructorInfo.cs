@@ -41,12 +41,15 @@ namespace Semverify.ApiModel
 
         public override string GetFullName()
         {
-            return ctor.DeclaringType.ResolveQualifiedName();
+            var parameters = GetParameters();
+            var parameterString = string.Join(", ", parameters);
+
+            return $"{ctor.DeclaringType.ResolveQualifiedName()}.{GetLocalName()}({parameterString})";
         }
 
         public override string GetLocalName()
         {
-            return ctor.DeclaringType.ResolveLocalName();
+            return GetConstructorName();
         }
 
         public override IList<string> GetModifiers()
@@ -75,12 +78,9 @@ namespace Semverify.ApiModel
             var mods = GetModifiers(); ;
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            var parameters = GetParameters();
-            var parameterString = string.Join(", ", parameters);
-
             var accessorString = $" {GetAccessor()}";
 
-            return $"{modString}{GetFullName()}.{GetConstructorName()}({parameterString}){accessorString}";
+            return $"{modString}{GetFullName()}{accessorString}";
         }
 
         private string GetConstructorName()

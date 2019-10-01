@@ -16,11 +16,6 @@ namespace Semverify.ApiModel
             module = mod;
         }
 
-        public static IDictionary<string, ApiModuleInfo> GetModulesForAssembly(Assembly assembly)
-        {
-            return assembly.GetModules().OrderBy(m => m.Name).ToDictionary(m => m.Name, m => new ApiModuleInfo(m));
-        }
-
         public string FormatForApiOutput(int indentLevel = 0)
         {
             var indentSize = indentLevel * ApiMemberInfo.IndentSpaces;

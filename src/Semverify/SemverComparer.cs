@@ -21,10 +21,9 @@ namespace Semverify
             {
                 var assembly1 = loadContext1.LoadFromAssemblyPath(input.AssemblyPath);
                 var assembly1Semver = GetSemanticVersion(assembly1);
-                var assembly1Modules = ApiModuleInfo.GetModulesForAssembly(assembly1);
 
-                WriteApiToFile(assembly1Modules.Values, GetSafeApiFileName(outputApiPath, input.AssemblyPath, assembly1Semver, ".api.txt"));
-                WriteSignaturesToFile(assembly1Modules.Values, GetSafeApiFileName(outputApiPath, input.AssemblyPath, assembly1Semver, ".signatures.txt"));
+                WriteApiToFile(assembly1, GetSafeApiFileName(outputApiPath, input.AssemblyPath, assembly1Semver, ".api.txt"));
+                WriteSignaturesToFile(assembly1, GetSafeApiFileName(outputApiPath, input.AssemblyPath, assembly1Semver, ".signatures.txt"));
             }
 
             return 0;
@@ -37,10 +36,7 @@ namespace Semverify
                 var assembly1Semver = GetSemanticVersion(assembly1);
                 var assembly2Semver = GetSemanticVersion(assembly2);
 
-                var assembly1Modules = ApiModuleInfo.GetModulesForAssembly(assembly1);
-                var assembly2Modules = ApiModuleInfo.GetModulesForAssembly(assembly2);
-
-                var compareResult = ComparePublicApi(assembly1Modules, assembly2Modules);
+                var compareResult = ComparePublicApi(assembly1, assembly2);
 
                 var dependencyCompareResult = CompareDependencies(assembly1, assembly2);
 
@@ -58,8 +54,8 @@ namespace Semverify
                         path1 = Path.Join(Path.GetDirectoryName(path1), Path.GetFileNameWithoutExtension(path1), "(1)", Path.GetExtension(path1));
                         path2 = Path.Join(Path.GetDirectoryName(path2), Path.GetFileNameWithoutExtension(path2), "(2)", Path.GetExtension(path2));
                     }
-                    WriteApiToFile(assembly1Modules.Values, path1);
-                    WriteApiToFile(assembly2Modules.Values, path2);
+                    WriteApiToFile(assembly1, path1);
+                    WriteApiToFile(assembly2, path2);
                 }
 
                 var calculatedSemver = CalculateSemver(assembly1Semver, compareResult);
@@ -70,7 +66,7 @@ namespace Semverify
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine();
-                        Console.WriteLine($"Valid [{expectedChangeType}] semver change for {Path.GetFileNameWithoutExtension(assembly1.GetName().Name)} ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}). Calculated as [{compareResult}] ({calculatedSemver})");
+                        Console.WriteLine($"Valid [{expectedChangeType}] semver change for {assembly1.GetName().Name} {assembly1Semver.ToShortVerion()} => {assembly2.GetName().Name} {assembly2Semver.ToShortVerion()}. Calculated as [{compareResult}] ({calculatedSemver})");
                         Console.ResetColor();
                         return 0;
                     }
@@ -78,7 +74,7 @@ namespace Semverify
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine();
-                        Console.WriteLine($"Changes for {Path.GetFileNameWithoutExtension(assembly1.GetName().Name)} ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}) do not meet semver guidelines for a [{expectedChangeType}] change.  Calculated as [{compareResult}] ({calculatedSemver})");
+                        Console.WriteLine($"Changes for {assembly1.GetName().Name} {assembly1Semver.ToShortVerion()} => {assembly2.GetName().Name} {assembly2Semver.ToShortVerion()} do not meet semver guidelines for a [{expectedChangeType}] change.  Calculated as [{compareResult}] ({calculatedSemver})");
                         Console.ResetColor();
                         return 1;
                     }
@@ -86,7 +82,7 @@ namespace Semverify
                 else
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"The calculated semver for {Path.GetFileNameWithoutExtension(assembly1.GetName().Name)} ({assembly1Semver.ToShortVerion()} => {assembly2Semver.ToShortVerion()}) is [{compareResult}] ({calculatedSemver})");
+                    Console.WriteLine($"The calculated semver for {assembly1.GetName().Name} {assembly1Semver.ToShortVerion()} => {assembly2.GetName().Name} {assembly2Semver.ToShortVerion()} is [{compareResult}] ({calculatedSemver})");
                     return 0;
                 }
             });
@@ -135,30 +131,31 @@ namespace Semverify
             return calculatedChange;
         }
 
-        private static SemverChangeType ComparePublicApi(IDictionary<string, ApiModuleInfo> assembly1Modules, IDictionary<string, ApiModuleInfo> assembly2Modules)
+        private static SemverChangeType ComparePublicApi(Assembly assembly1, Assembly assembly2)
         {
-            if (!assembly1Modules.Keys.OrderBy(k => k).SequenceEqual(assembly2Modules.Keys.OrderBy(k => k)))
-            {
-                Console.WriteLine();
-                Console.WriteLine("The assemblies have different modules that will not be compared.");
-            }
-
             var changes = new List<(ApiChangeType changeType, ApiMemberInfo member)>();
+            var unmatchedModules = new List<(string moduleName, string assemblyName)>();
+            var assembly2Modules = assembly2.Modules.ToDictionary(m => m.Name, m => new ApiModuleInfo(m));
 
-            foreach (var (modName, assembly1Module) in assembly1Modules)
+            foreach (var assembly1Module in assembly1.Modules.Select(m=>new ApiModuleInfo(m)))
             {
-                if (!assembly2Modules.TryGetValue(modName, out var assembly2Module))
+                if (!assembly2Modules.TryGetValue(assembly1Module.Name, out var assembly2Module))
                 {
+                    unmatchedModules.Add((assembly1Module.Name, assembly1.GetName().Name));
                     continue;
                 }
 
-                var assembly2ModuleTypes = assembly2Module.EnumerateTypes().ToDictionary(t => t.GetSignature(), t => t);
-                foreach (var (signature, assembly1Type) in assembly1Module.EnumerateTypes().ToDictionary(t => t.GetSignature(), t => t))
+                assembly2Modules.Remove(assembly2Module.Name);
+
+                var assembly2ModuleTypes = assembly2Module.EnumerateTypes().ToDictionary(t => t.GetFullName(), t => t);
+                foreach (var assembly1Type in assembly1Module.EnumerateTypes())
                 {
-                    if (assembly2ModuleTypes.TryGetValue(signature, out var assembly2Type))
+                    var fullName = assembly1Type.GetFullName();
+
+                    if (assembly2ModuleTypes.TryGetValue(fullName, out var assembly2Type))
                     {
                         CompareApiTypeInfos(assembly1Type, assembly2Type, changes);
-                        assembly2ModuleTypes.Remove(signature);
+                        assembly2ModuleTypes.Remove(fullName);
                     }
                     else
                     {
@@ -166,10 +163,21 @@ namespace Semverify
                     }
                 }
 
-                foreach (var (signature, assembly2Type) in assembly2ModuleTypes)
+                foreach (var assembly2Type in assembly2ModuleTypes.Values)
                 {
                     changes.Add((ApiChangeType.Addition, assembly2Type));
                 }
+            }
+
+            foreach (var assembly2Module in assembly2Modules.Values)
+            {
+                unmatchedModules.Add((assembly2Module.Name, assembly2.GetName().Name));
+            }
+
+            if (unmatchedModules.Any())
+            {
+                unmatchedModules.ForEach(m => Console.WriteLine($"Unmatched module: {m.moduleName} in {m.assemblyName}"));
+                return SemverChangeType.Major;
             }
 
             return ProcessChanges(changes);
@@ -177,20 +185,40 @@ namespace Semverify
 
         private static SemverChangeType ProcessChanges(IList<(ApiChangeType changeType, ApiMemberInfo member)> changes)
         {
-            foreach (var changesByName in changes.GroupBy(c => (c.member.MemberType, c.member.GetFullName())))
+            foreach (var changesByName in changes.GroupBy(c => (c.member.MemberType, c.member.Namespace, c.member.GetLocalName())))
             {
-                var adds = changesByName.Where(c => c.changeType == ApiChangeType.Addition).OrderBy(c => c.member, new MemberInfoDisplayComparer()).ToList();
-                var removes = changesByName.Where(c => c.changeType == ApiChangeType.Removal).OrderBy(c => c.member, new MemberInfoDisplayComparer()).ToList();
+                var adds = changesByName.Where(c => c.changeType == ApiChangeType.Addition).ToDictionary(c => c.member.GetSignature(), c => c.member);
+                var removes = changesByName.Where(c => c.changeType == ApiChangeType.Removal).ToDictionary(c => c.member.GetSignature(), c => c.member);
+                var levenshteinPairs = new List<(int distance, string addKey, string removeKey)>();
 
-                var modifications = adds.Zip(removes, (a, r) => (changeType: ApiChangeType.Removal & ApiChangeType.Addition, members: new[] { r, a })).ToList();
-                var modCount = modifications.Count;
+                foreach (var add in adds)
+                {
+                    var levenshtein = new Levenshtein(add.Key);
+                    foreach (var remove in removes)
+                    {
+                        var distance = levenshtein.DistanceFrom(remove.Key);
+                        levenshteinPairs.Add((distance, add.Key, remove.Key));
+                    }
+                }
 
-                modifications.AddRange(adds.Skip(modCount).Select(a => (changeType: ApiChangeType.Addition, members: new[] { a })));
-                modifications.AddRange(removes.Skip(modCount).Select(a => (changeType: ApiChangeType.Removal, members: new[] { a })));
+                var modifications = new List<(ApiChangeType modification, (ApiChangeType changeType, ApiMemberInfo member)[] changePairs)>();
 
-                foreach (var (changeType, changePairs) in modifications.OrderBy(c => c.members.First().member, new MemberInfoDisplayComparer()))
+                foreach (var (distance, addKey, removeKey) in levenshteinPairs.OrderBy(lp => lp.distance).ThenBy(lp => lp.removeKey))
+                {
+                    if (adds.TryGetValue(addKey, out var add) && removes.TryGetValue(removeKey, out var remove))
+                    {
+                        modifications.Add((ApiChangeType.Addition | ApiChangeType.Removal, new[] { (ApiChangeType.Addition, add), (ApiChangeType.Removal, remove) }));
+                        adds.Remove(addKey);
+                        removes.Remove(removeKey);
+                    }
+                }
+
+                modifications.AddRange(adds.Values.Select(a => (ApiChangeType.Addition, new[] { (ApiChangeType.Addition, a) })));
+                modifications.AddRange(removes.Values.Select(r => (ApiChangeType.Removal, new[] { (ApiChangeType.Removal, r) })));
+
+                foreach (var (modification, changePairs) in modifications.OrderBy(c => c.changePairs.First().member, new MemberInfoDisplayComparer()))
                 {                    
-                    switch (changeType)
+                    switch (modification)
                     {
                         case ApiChangeType.Addition:
                             Console.ForegroundColor = ConsoleColor.DarkGreen;
@@ -198,7 +226,7 @@ namespace Semverify
                         case ApiChangeType.Removal:
                             Console.ForegroundColor = ConsoleColor.DarkRed;
                             break;
-                        case ApiChangeType.Addition & ApiChangeType.Removal:
+                        case ApiChangeType.Addition | ApiChangeType.Removal:
                             Console.ForegroundColor = ConsoleColor.DarkYellow;
                             break;
                     }
@@ -268,26 +296,38 @@ namespace Semverify
 
         private static void CompareApiTypeInfos(ApiTypeInfo assembly1Type, ApiTypeInfo assembly2Type, IList<(ApiChangeType change, ApiMemberInfo member)> changes)
         {
-            var type2Members = assembly2Type.EnumerateMembers().ToDictionary(m => m.GetSignature(), m => m);
+
+            if (assembly1Type.GetSignature() != assembly2Type.GetSignature())
+            {
+                changes.Add((ApiChangeType.Removal, assembly1Type));
+                changes.Add((ApiChangeType.Addition, assembly2Type));
+            }
+
+            var type2Members = assembly2Type.EnumerateMembers().ToDictionary(m => m.GetFullName(), m => m);
 
             foreach (var member in assembly1Type.EnumerateMembers())
             {
-                var signature = member.GetSignature();
-                if (!type2Members.TryGetValue(signature, out var assembly2TypeMember))
+                var fullName = member.GetFullName();
+                if (!type2Members.TryGetValue(fullName, out var assembly2TypeMember))
                 {
                     changes.Add((ApiChangeType.Removal, member));
                 }
                 else
                 {
-                    type2Members.Remove(signature);
                     if (member is ApiTypeInfo nestedType1Member && assembly2TypeMember is ApiTypeInfo nestedType2Member)
                     {
                         CompareApiTypeInfos(nestedType1Member, nestedType2Member, changes);
                     }
+                    else if (member.GetSignature() != assembly2TypeMember.GetSignature())
+                    {
+                        changes.Add((ApiChangeType.Removal, member));
+                        changes.Add((ApiChangeType.Addition, assembly2TypeMember));
+                    }
+                    type2Members.Remove(fullName);
                 }
             }
 
-            foreach (var (sig, member) in type2Members)
+            foreach (var member in type2Members.Values)
             {
                 changes.Add((ApiChangeType.Addition, member));
             }
@@ -318,11 +358,11 @@ namespace Semverify
             return Path.Combine(outputPath, safeName);
         }
 
-        private static void WriteApiToFile(IEnumerable<ApiModuleInfo> modules, string outputPath)
+        private static void WriteApiToFile(Assembly assembly, string outputPath)
         {
             var apiBuilder = new StringBuilder();
 
-            foreach (var mod in modules)
+            foreach (var mod in assembly.Modules.Select(m=>new ApiModuleInfo(m)))
             {
                 apiBuilder.AppendLine(mod.FormatForApiOutput());
             }
@@ -330,11 +370,11 @@ namespace Semverify
             File.WriteAllText(outputPath, apiBuilder.ToString());
         }
 
-        private static void WriteSignaturesToFile(IEnumerable<ApiModuleInfo> modules, string outputPath)
+        private static void WriteSignaturesToFile(Assembly assembly, string outputPath)
         {
             var apiBuilder = new StringBuilder();
 
-            foreach (var mod in modules)
+            foreach (var mod in assembly.Modules.Select(m => new ApiModuleInfo(m)))
             {
                 foreach (var sig in mod.EnumerateAllMembers().Select(m => m.GetSignature()))
                 {

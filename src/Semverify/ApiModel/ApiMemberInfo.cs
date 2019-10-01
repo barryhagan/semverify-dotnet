@@ -15,6 +15,8 @@ namespace Semverify.ApiModel
 
         public MemberTypes MemberType { get => MemberInfo.MemberType; }
 
+        public virtual string Namespace { get => MemberInfo.DeclaringType.Namespace; }
+
         public ApiMemberInfo(MemberInfo memberInfo)
         {
             MemberInfo = memberInfo;

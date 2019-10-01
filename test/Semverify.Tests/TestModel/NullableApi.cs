@@ -19,7 +19,9 @@ namespace Semverify.Tests.TestModel
             public string? Target { get; set; }
         }
 
+#pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
         public NullableApi(string? nullableLabel, string nope)
+#pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
         {
 
         }
