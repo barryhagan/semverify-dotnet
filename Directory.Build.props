@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Product>semverify-dotnet</Product>    
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <InformationalVersion>0.1.6-alpha01</InformationalVersion>
+    <InformationalVersion>0.1.7-alpha01</InformationalVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
