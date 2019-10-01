@@ -55,7 +55,10 @@ namespace Semverify.ApiModel
         {
             foreach (var type in module.GetTypes().Where(t => t.IsVisible && !t.IsNested).OrderBy(t => t.FullName ?? t.Name))
             {
-                yield return ApiTypeInfo.LoadType(type);
+                if (!ApiTypeInfo.HasAbstractInternalMembers(type))
+                {
+                    yield return ApiTypeInfo.LoadType(type);
+                }
             }
         }
 

@@ -116,7 +116,7 @@ namespace Semverify.ApiModel
             var constraintString = constraints.Any() ? $" {string.Join(" ", constraints)}" : "";
 
             var accessorString = $" {GetAccessor()}";
-           
+
             return $"{modString}{GetFullName()}{implString}{constraintString}{accessorString}";
         }
 
@@ -131,7 +131,7 @@ namespace Semverify.ApiModel
 
         protected virtual IList<string> GetInterfaces()
         {
-            var implList = new List<string>();     
+            var implList = new List<string>();
             var interfaces = TypeInfo.GetInterfaces();
             var inheritedInterfaces = interfaces.SelectMany(i => i.GetInterfaces()).Concat(TypeInfo.BaseType?.GetInterfaces() ?? new Type[0]);
             foreach (var intface in TypeInfo.GetInterfaces().Except(inheritedInterfaces))
@@ -195,7 +195,7 @@ namespace Semverify.ApiModel
                     {
                         continue;
                     }
-                    yield return new ApiConstructorInfo(ctor);                    
+                    yield return new ApiConstructorInfo(ctor);
                 }
                 else if (member is PropertyInfo property)
                 {
@@ -220,9 +220,65 @@ namespace Semverify.ApiModel
                         continue;
                     }
 
-                    yield return LoadType(nested);
+                    if (!HasAbstractInternalMembers(nested))
+                    {
+                        yield return LoadType(nested);
+                    }
                 }
             }
+        }
+
+        public static bool HasAbstractInternalMembers(Type type)
+        {
+            if (type.IsAbstract && !type.IsInterface)
+            {
+                foreach (var member in type.GetMembers(BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    if (member is MethodInfo method)
+                    {
+                        if (method.IsAbstract && (method.IsAssembly || method.IsFamilyAndAssembly))
+                        {
+                            return true;
+                        }
+                    }
+                    else if (member is ConstructorInfo ctor)
+                    {
+                        if (ctor.IsAbstract && (ctor.IsAssembly || ctor.IsFamilyAndAssembly))
+                        {
+                            return true;
+                        }
+                    }
+                    else if (member is PropertyInfo property)
+                    {
+                        var getter = property.GetMethod;
+                        if ((getter?.IsAbstract ?? false) && (getter.IsAssembly || getter.IsFamilyAndAssembly))
+                        {
+                            return true;
+                        }
+                        var setter = property.SetMethod;
+                        if ((setter?.IsAbstract ?? false) && (setter.IsAssembly || setter.IsFamilyAndAssembly))
+                        {
+                            return true;
+                        }
+                    }
+                    else if (member.MemberType == MemberTypes.Event)
+                    {
+                        var addMethod = member.GetType().GetProperty("AddMethod", BindingFlags.Instance | BindingFlags.Public).GetValue(member, null) as MethodInfo;
+                        if (addMethod.IsAbstract && (addMethod.IsAssembly || addMethod.IsFamilyAndAssembly))
+                        {
+                            return true;
+                        }
+                    }
+                    else if (member is TypeInfo nested)
+                    {
+                        if (nested.IsAbstract && (nested.IsNestedAssembly || nested.IsNestedFamANDAssem))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         public static ApiTypeInfo LoadType(Type type)
