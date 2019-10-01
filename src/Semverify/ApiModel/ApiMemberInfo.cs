@@ -54,18 +54,22 @@ namespace Semverify.ApiModel
                 if ((constraints & GenericParameterAttributes.NotNullableValueTypeConstraint) != 0)
                 {
                     constraintList.Add("struct");
+                    constraintList.AddRange(genericArg.GetGenericParameterConstraints().Select(t => t.ResolveQualifiedName().Replace("enum", "Enum")).Except(new[] { "System.ValueType" }));
                 }
                 else
                 {
                     if ((constraints & GenericParameterAttributes.ReferenceTypeConstraint) != 0)
+                    {
                         constraintList.Add("class");
+                    }
+
+                    constraintList.AddRange(genericArg.GetGenericParameterConstraints().Select(t => t.ResolveQualifiedName().Replace("enum", "Enum")));
+
                     if ((constraints & GenericParameterAttributes.DefaultConstructorConstraint) != 0)
+                    {
                         constraintList.Add("new()");
+                    }
                 }
-
-                constraintList.AddRange(genericArg.GetGenericParameterConstraints().Select(t => t.ResolveQualifiedName().Replace("enum", "Enum")).Except(new[] { "System.ValueType" }));
-
-                constraintList.Remove("System.ValueType");
 
                 if (constraintList.Any())
                 {
