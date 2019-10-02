@@ -129,7 +129,7 @@ namespace Semverify.ApiModel
             return null;
         }
 
-        protected virtual IList<string> GetInterfaces()
+        public virtual IList<string> GetInterfaces()
         {
             var implList = new List<string>();
             var interfaces = TypeInfo.GetInterfaces();

@@ -185,6 +185,8 @@ namespace Semverify
 
         private static SemverChangeType ProcessChanges(IList<(ApiChangeType changeType, ApiMemberInfo member)> changes)
         {
+            var effectiveChange = SemverChangeType.None;
+
             foreach (var changesByName in changes.GroupBy(c => (c.member.MemberType, c.member.Namespace, c.member.GetLocalName())))
             {
                 var adds = changesByName.Where(c => c.changeType == ApiChangeType.Addition).ToDictionary(c => c.member.GetSignature(), c => c.member);
@@ -201,23 +203,25 @@ namespace Semverify
                     }
                 }
 
-                var modifications = new List<(ApiChangeType modification, (ApiChangeType changeType, ApiMemberInfo member)[] changePairs)>();
+                var modifications = new List<(ApiChangeType modification, ApiMemberInfo memberAdded, ApiMemberInfo memberRemoved)>();
 
                 foreach (var (distance, addKey, removeKey) in levenshteinPairs.OrderBy(lp => lp.distance).ThenBy(lp => lp.removeKey))
                 {
                     if (adds.TryGetValue(addKey, out var add) && removes.TryGetValue(removeKey, out var remove))
                     {
-                        modifications.Add((ApiChangeType.Addition | ApiChangeType.Removal, new[] { (ApiChangeType.Addition, add), (ApiChangeType.Removal, remove) }));
+                        modifications.Add((ApiChangeType.Addition | ApiChangeType.Removal, add, remove));
                         adds.Remove(addKey);
                         removes.Remove(removeKey);
                     }
                 }
 
-                modifications.AddRange(adds.Values.Select(a => (ApiChangeType.Addition, new[] { (ApiChangeType.Addition, a) })));
-                modifications.AddRange(removes.Values.Select(r => (ApiChangeType.Removal, new[] { (ApiChangeType.Removal, r) })));
+                modifications.AddRange(adds.Values.Select(a => (ApiChangeType.Addition, a, (ApiMemberInfo)null)));
+                modifications.AddRange(removes.Values.Select(r => (ApiChangeType.Removal, (ApiMemberInfo)null, r)));
 
-                foreach (var (modification, changePairs) in modifications.OrderBy(c => c.changePairs.First().member, new MemberInfoDisplayComparer()))
-                {                    
+                var ruleEngine = new SemverRuleEngine();
+
+                foreach (var (modification, added, removed) in modifications.OrderBy(c => c.memberAdded ?? c.memberRemoved, new MemberInfoDisplayComparer()))
+                {                                        
                     switch (modification)
                     {
                         case ApiChangeType.Addition:
@@ -231,19 +235,23 @@ namespace Semverify
                             break;
                     }
 
-                    foreach (var change in changePairs)
+                    foreach (var rule in ruleEngine.InspectRules(removed, added))
                     {
-                        var prefix = "";
-                        switch (change.changeType)
+                        if (effectiveChange < rule.ChangeType)
                         {
-                            case ApiChangeType.Addition:
-                                prefix = "+ ";
-                                break;
-                            case ApiChangeType.Removal:
-                                prefix = "- ";
-                                break;
+                            effectiveChange = rule.ChangeType;
                         }
-                        Console.WriteLine($"{prefix}{change.member.GetSignature()}");
+                        Console.WriteLine($"[{rule.ChangeType}] {rule.RuleName}");
+                    }
+
+                    if (removed != null)
+                    {
+                        Console.WriteLine($"- {removed.GetSignature()}");
+                    }
+
+                    if (added != null)
+                    {
+                        Console.WriteLine($"+ {added.GetSignature()}");
                     }
 
                     Console.ResetColor();
@@ -251,11 +259,7 @@ namespace Semverify
                 }
             }
 
-            var semverChangeType = changes.Any(c => c.changeType == ApiChangeType.Removal) ? SemverChangeType.Major
-                 : changes.Any(c => c.changeType == ApiChangeType.Addition) ? SemverChangeType.Minor
-                 : SemverChangeType.Patch;
-           
-            return semverChangeType;
+            return effectiveChange;
         }
 
         private static Semver CalculateSemver(Semver current, SemverChangeType compareResult)
@@ -276,9 +280,17 @@ namespace Semverify
                 switch (compareResult)
                 {
                     case SemverChangeType.Major:
-                        calculatedSemver.Major++;
-                        calculatedSemver.Minor = 0;
-                        calculatedSemver.Patch = 0;
+                        if (calculatedSemver.Major == 0)
+                        {
+                            calculatedSemver.Minor++;
+                            calculatedSemver.Patch = 0;
+                        }
+                        else
+                        {
+                            calculatedSemver.Major++;
+                            calculatedSemver.Minor = 0;
+                            calculatedSemver.Patch = 0;
+                        }
                         break;
                     case SemverChangeType.Minor:
                         calculatedSemver.Minor++;

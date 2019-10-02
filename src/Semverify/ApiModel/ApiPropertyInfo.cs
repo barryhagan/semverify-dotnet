@@ -29,6 +29,29 @@ namespace Semverify.ApiModel
             return $"{new string(' ', indentLevel * IndentSpaces)}{modString}{propertyInfo.PropertyType.ResolveQualifiedName(propertyInfo.GetReferenceNullability())} {GetLocalName()} {accessor}";
         }
 
+        public override string GetAccessor()
+        {
+            var mods = GetModifiers();
+            var getter = GetVisibleGetter();
+            var setter = GetVisibleSetter();
+
+            var accessString = new StringBuilder("{");
+            if (getter != null)
+            {
+                var getterMods = new ApiMethodInfo(getter).GetModifiers().Except(mods);
+                var getterString = getterMods.Any() ? $" {string.Join(" ", getterMods)} get;" : " get;";
+                accessString.Append(getterString);
+            }
+            if (setter != null)
+            {
+                var setterMods = new ApiMethodInfo(setter).GetModifiers().Except(mods);
+                var setterString = setterMods.Any() ? $" {string.Join(" ", setterMods)} set;" : " set;";
+                accessString.Append(setterString);
+            }
+            accessString.Append(" }");
+            return accessString.ToString();
+        }
+
         public override string GetFullName()
         {
             return $"{propertyInfo.DeclaringType.ResolveQualifiedName()}.{GetLocalName()}";
@@ -95,6 +118,10 @@ namespace Semverify.ApiModel
             return $"{modString}{propertyInfo.PropertyType.ResolveQualifiedName(propertyInfo.GetReferenceNullability())} {GetFullName()} {accessor}";
         }
 
+        public bool HasGetter { get => GetVisibleGetter() != null; }
+
+        public bool HasSetter { get => GetVisibleSetter() != null; }
+
         private MethodInfo GetVisibleGetter()
         {
             var getter = propertyInfo.GetGetMethod(true);
@@ -127,29 +154,6 @@ namespace Semverify.ApiModel
             }
 
             return null;
-        }
-
-        public override string GetAccessor()
-        {
-            var mods = GetModifiers();
-            var getter = GetVisibleGetter();
-            var setter = GetVisibleSetter();
-
-            var accessString = new StringBuilder("{");
-            if (getter != null)
-            {
-                var getterMods = new ApiMethodInfo(getter).GetModifiers().Except(mods);
-                var getterString = getterMods.Any() ? $" {string.Join(" ", getterMods)} get;" : " get;";
-                accessString.Append(getterString);
-            }
-            if (setter != null)
-            {
-                var setterMods = new ApiMethodInfo(setter).GetModifiers().Except(mods);
-                var setterString = setterMods.Any() ? $" {string.Join(" ", setterMods)} set;" : " set;";
-                accessString.Append(setterString);
-            }
-            accessString.Append(" }");
-            return accessString.ToString();
         }
     }
 }

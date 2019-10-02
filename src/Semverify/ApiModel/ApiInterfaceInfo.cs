@@ -17,7 +17,7 @@ namespace Semverify.ApiModel
             return mods;
         }
 
-        protected override IList<string> GetInterfaces()
+        public override IList<string> GetInterfaces()
         {
             var implList = new List<string>();
             var interfaces = TypeInfo.GetInterfaces();
