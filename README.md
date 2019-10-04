@@ -18,23 +18,32 @@ semverify Newtonsoft.Json@12.0.1 Newtonsoft.Json@12.0.2
 ```
 
 ```diff
+[Minor] New member
 + public Newtonsoft.Json.MissingMemberHandling Newtonsoft.Json.JsonObjectAttribute.MissingMemberHandling { get; set; }
 
+[Minor] New member
 + public Newtonsoft.Json.Linq.JTokenReader.JTokenReader(Newtonsoft.Json.Linq.JToken token, string initialPath) { }
 
-+ public Newtonsoft.Json.JsonConverter Newtonsoft.Json.Serialization.JsonContract.InternalConverter { get; internal set; }
+[Minor] New member
++ public Newtonsoft.Json.JsonConverter Newtonsoft.Json.Serialization.JsonContract.InternalConverter { get; }
 
-+ public System.Nullable<Newtonsoft.Json.MissingMemberHandling> Newtonsoft.Json.Serialization.JsonObjectContract.MissingMemberHandling { get; set; }
+[Minor] New member
++ public System.MissingMemberHandling? Newtonsoft.Json.Serialization.JsonObjectContract.MissingMemberHandling { get; set; }
 
+[Minor] New member
 + public bool Newtonsoft.Json.Serialization.JsonProperty.IsRequiredSpecified { get; }
 
+[Minor] New member
 + public override int Newtonsoft.Json.Serialization.NamingStrategy.GetHashCode() { }
 
+[Minor] New member
 + public override bool Newtonsoft.Json.Serialization.NamingStrategy.Equals(object obj) { }
 
-+ protected new bool Newtonsoft.Json.Serialization.NamingStrategy.Equals(Newtonsoft.Json.Serialization.NamingStrategy other) { }
+[Minor] New member
++ protected bool Newtonsoft.Json.Serialization.NamingStrategy.Equals(Newtonsoft.Json.Serialization.NamingStrategy other) { }
 
-The calculated semver for (12.0.1 => 12.0.2) was [Minor] (12.1.0)
+
+The calculated semver for Newtonsoft.Json 12.0.1 => Newtonsoft.Json 12.0.2 is [Minor] (12.1.0)
 ```
 
 Compare a NuGet package to a locally built assembly DLL:
@@ -68,11 +77,11 @@ jobs:
       with:
         dotnet-version: '3.0.100'
     - name: Install semverify
-      run: dotnet tool install -g semverify-dotnet-tool --version 0.1.4-alpha01
+      run: dotnet tool install -g semverify-dotnet-tool --version 0.1.8-alpha01
     - name: dotnet publish
       run: dotnet publish -f netstandard2.0 -c Release -o Assemblies ./src/Marten/Marten.csproj
     - name: Run semverify for the current commit
-      run: $HOME/.dotnet/tools/semverify Marten@3.8.0 Assemblies/Marten.dll --expected-change-type Minor
+      run: $HOME/.dotnet/tools/semverify Marten@3.9.0 Assemblies/Marten.dll --expected-change-type Minor
       env:
         DOTNET_ROOT: /opt/hostedtoolcache/dncs/3.0.100/x64
 ```
@@ -93,5 +102,6 @@ Options:
   --a2-deps, --assembly2-deps-path <a2-deps>         The path to dependencies of assembly 2
   --output-api <output-api>                          The path to output the generated API text files
   --expected-change-type <Major|Minor|None|Patch>    The expected semver change type for this comparison
+  --use-dependency-changes                           Use dependency semver changes to calculate the assembly change type
   --version                                          Display version information
   ```
