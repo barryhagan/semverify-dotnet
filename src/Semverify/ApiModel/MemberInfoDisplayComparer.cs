@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 
 namespace Semverify.ApiModel
@@ -49,7 +50,7 @@ namespace Semverify.ApiModel
             {
                 var xParams = xCtor.GetParameters();
                 var yParams = yCtor.GetParameters();
-                var paramCompare = xParams.Count.CompareTo(yParams.Count);
+                var paramCompare = xParams.Count().CompareTo(yParams.Count());
                 if (paramCompare != 0) return paramCompare;
             }
 
@@ -57,7 +58,7 @@ namespace Semverify.ApiModel
             {
                 var xParams = xMethod.GetParameters();
                 var yParams = yMethod.GetParameters();
-                var paramCompare = xParams.Count.CompareTo(yParams.Count);
+                var paramCompare = xParams.Count().CompareTo(yParams.Count());
                 if (paramCompare != 0) return paramCompare;
             }
 

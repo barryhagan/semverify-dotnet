@@ -79,42 +79,12 @@ namespace Semverify.ApiModel
             return templateConstraints;
         }
 
-        protected virtual IList<string> ResolveParameters(ParameterInfo[] parameters, bool applyGenericModifiers = true, MemberInfo context = null)
+        protected virtual IEnumerable<ApiTypeDetails> ResolveParameters(ParameterInfo[] parameters, bool applyGenericModifiers = true, MemberInfo context = null)
         {
-            var paramList = new List<string>();
             foreach (var param in parameters)
             {
-                var mods = new List<string>();
-                mods.AddIf(param.ParameterType.IsByRef && !param.IsOut, "ref");
-                if (applyGenericModifiers)
-                {
-                    mods.AddIf(param.IsIn, "in");
-                    mods.AddIf(param.ParameterType.IsByRef && param.IsOut, "out");
-                }
-                mods.AddIf(param.HasAttribute(typeof(ParamArrayAttribute)), "params");
-                var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
-
-                string defaultValue = string.Empty;
-                if (param.IsOptional)
-                {
-                    try
-                    {
-                        var defaultVal = param.RawDefaultValue?.ToString();
-                        if (param.ParameterType.FullName == "System.String" && defaultVal != null)
-                        {
-                            defaultVal = $"\"{defaultVal}\"";
-                        }
-                        defaultValue = $" = {defaultVal ?? "null"}";
-                    }
-                    catch (BadImageFormatException)
-                    {
-                        defaultValue = " = ???";
-                    }
-                }
-
-                paramList.Add($"{modString}{param.ParameterType.ResolveQualifiedName(param.GetReferenceNullability(context ?? MemberInfo), applyGenericModifiers)} {param.Name}{defaultValue}");
+                yield return new ApiTypeDetails(param, param.GetReferenceNullability(context ?? MemberInfo), applyGenericModifiers);
             }
-            return paramList;
         }
 
         protected virtual bool HasNewModifier(Type baseType, MemberInfo member)

@@ -67,14 +67,16 @@ namespace Semverify.ApiModel
             var accessor = GetAccessor();
             var accessorString = accessor.Length > 0 ? $" {accessor}" : ";";
 
+            var returnParam = GetReturnParameter();
+
             if (MethodInfo.IsSpecialName && (MethodInfo.Name == "op_Implicit" || MethodInfo.Name == "op_Explicit"))
             {
-                var name = $"{modString}{GetLocalName()}{MethodInfo.ReturnType.ResolveLocalName(GetReturnTypeNullability(MethodInfo), false)}({extensionMethod}{parameterString}){constraintString}{accessorString}";
+                var name = $"{modString}{GetLocalName()}{returnParam.Type.ResolveLocalName(returnParam.ReferenceNullability, false)}({extensionMethod}{parameterString}){constraintString}{accessorString}";
                 return $"{new string(' ', indentLevel * IndentSpaces)}{name}";
             }
             else
             {
-                var name = $"{modString}{MethodInfo.ReturnType.ResolveQualifiedName(GetReturnTypeNullability(MethodInfo), false)} {GetLocalName()}({extensionMethod}{parameterString}){constraintString}{accessorString}";
+                var name = $"{modString}{returnParam.Type.ResolveQualifiedName(returnParam.ReferenceNullability, false)} {GetLocalName()}({extensionMethod}{parameterString}){constraintString}{accessorString}";
                 return $"{new string(' ', indentLevel * IndentSpaces)}{name}";
             }
         }
@@ -144,9 +146,14 @@ namespace Semverify.ApiModel
             return mods;
         }
 
-        public IList<string> GetParameters()
+        public IEnumerable<ApiTypeDetails> GetParameters()
         {
             return ResolveParameters(MethodInfo.GetParameters(), !MethodInfo.DeclaringType.IsInterface);
+        }
+
+        public ApiTypeDetails GetReturnParameter()
+        {
+            return new ApiTypeDetails(MethodInfo.ReturnType, GetReturnTypeNullability(MethodInfo));
         }
 
         public override string GetSignature()
@@ -160,7 +167,9 @@ namespace Semverify.ApiModel
             var accessor = GetAccessor();
             var accessorString = accessor.Length > 0 ? $" {accessor}" : ";";
 
-            return $"{modString}{MethodInfo.ReturnType.ResolveQualifiedName(GetReturnTypeNullability(MethodInfo), applyGenericModifiers: false)} {GetFullName()}{constraintString}{accessorString}";
+            var returnParam = GetReturnParameter();
+
+            return $"{modString}{returnParam.Type.ResolveQualifiedName(returnParam.ReferenceNullability, false)} {GetFullName()}{constraintString}{accessorString}";
         }
 
         protected virtual string FormatGenericArgs()

@@ -110,6 +110,11 @@ namespace Semverify.ApiModel
             return mods;
         }
 
+        public ApiTypeDetails GetPropertyType()
+        {
+            return new ApiTypeDetails(propertyInfo.PropertyType, propertyInfo.GetReferenceNullability());
+        }
+
         public override string GetSignature()
         {
             var mods = GetModifiers();

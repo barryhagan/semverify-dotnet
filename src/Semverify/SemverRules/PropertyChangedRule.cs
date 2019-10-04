@@ -43,6 +43,18 @@ namespace Semverify.SemverRules
             {
                 yield return new SemverRuleResult("Modifiers changed", "The modifiers of this property were changed", SemverChangeType.Major);
             }
+
+            var priorTypeDetail = priorProperty.GetPropertyType();
+            var currentTypeDetail = currentProperty.GetPropertyType();
+
+            if (priorTypeDetail.Type.Name != currentTypeDetail.Type.Name)
+            {
+                yield return new SemverRuleResult("Type changed", "The type of this property was changed", SemverChangeType.Major);
+            }
+            else if (priorTypeDetail.ReferenceNullabilityHash != currentTypeDetail.ReferenceNullabilityHash)
+            {
+                yield return new SemverRuleResult($"Nullability changed", "The reference nullability of this property was changed", SemverChangeType.Patch);
+            }
         }
     }
 }

@@ -13,7 +13,10 @@ namespace Semverify
             new NewMemberRule(),
             new RemovedMemberRule(),
             new PropertyChangedRule(),
-            new TypeChangedRule()
+            new TypeChangedRule(),
+            new MethodChangedRule(),
+            new ConstructorChangedRule(),
+            new EventChangedRule()
         };
 
         public IEnumerable<SemverRuleResult> InspectRules(ApiMemberInfo prior, ApiMemberInfo current)

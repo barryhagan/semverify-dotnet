@@ -68,7 +68,7 @@ namespace Semverify.ApiModel
             return mods;
         }
 
-        public IList<string> GetParameters()
+        public IEnumerable<ApiTypeDetails> GetParameters()
         {
             return ResolveParameters(ctor.GetParameters());
         }

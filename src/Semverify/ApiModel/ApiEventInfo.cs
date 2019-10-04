@@ -19,9 +19,8 @@ namespace Semverify.ApiModel
         {
             var mods = MemberInfo.DeclaringType.IsInterface ? new List<string>() : GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
-            var eventType = addMethod.GetParameters().First();
-            var eventTypeString = eventType.ParameterType.ResolveQualifiedName(eventType.GetReferenceNullability(MemberInfo));
-            return $"{new string(' ', indentLevel * IndentSpaces)}{modString}event {eventTypeString} {GetLocalName()}{GetAccessor()}";
+            var eventType = GetEventType();
+            return $"{new string(' ', indentLevel * IndentSpaces)}{modString}event {eventType} {GetLocalName()}{GetAccessor()}";
         }
 
         public override string GetAccessor()
@@ -75,13 +74,18 @@ namespace Semverify.ApiModel
             return mods;
         }
 
+        public ApiTypeDetails GetEventType()
+        {
+            var eventType = addMethod.GetParameters().First();
+            return new ApiTypeDetails(eventType.ParameterType, eventType.GetReferenceNullability(MemberInfo));
+        }
+
         public override string GetSignature()
         {
             var mods = GetModifiers();
             var modString = mods.Any() ? $"{string.Join(" ", mods)} " : "";
 
-            var eventParam = addMethod.GetParameters().First();
-            var eventType = eventParam.ParameterType.ResolveQualifiedName(eventParam.GetReferenceNullability(addMethod));
+            var eventType = GetEventType();
 
             return $"{modString}event {eventType} {GetFullName()}{GetAccessor()}";
         }
