@@ -128,8 +128,6 @@ namespace Semverify.ApiModel
                 (condition: MethodInfo.IsPublic, value: "public"),
             });
 
-            mods.AddIf(MethodInfo.HasAttribute(typeof(IsReadOnlyAttribute)) && !MethodInfo.HasAttribute(typeof(CompilerGeneratedAttribute)), "readonly");
-
             if (!MethodInfo.IsFinal)
             {
                 mods.AddFirstIf(new[]
@@ -142,6 +140,8 @@ namespace Semverify.ApiModel
             }
 
             mods.AddIf(MethodInfo.IsStatic, "static");
+
+            mods.AddIf(MethodInfo.HasAttribute(typeof(IsReadOnlyAttribute)) && !MethodInfo.HasAttribute(typeof(CompilerGeneratedAttribute)), "readonly");
 
             return mods;
         }

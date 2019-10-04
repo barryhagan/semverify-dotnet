@@ -92,8 +92,6 @@ namespace Semverify.ApiModel
                     (condition: (access & MethodAttributes.FamANDAssem) == MethodAttributes.FamANDAssem, value: "private protected"),
                 });
 
-            mods.AddIf((getter?.HasAttribute(typeof(IsReadOnlyAttribute)) ?? false) && !(getter?.HasAttribute(typeof(CompilerGeneratedAttribute)) ?? false), "readonly");
-
             if ((access & MethodAttributes.Final) != MethodAttributes.Final)
             {
                 mods.AddFirstIf(new[]
@@ -106,6 +104,8 @@ namespace Semverify.ApiModel
             }
 
             mods.AddIf((access & MethodAttributes.Static) == MethodAttributes.Static, "static");
+
+            mods.AddIf((getter?.HasAttribute(typeof(IsReadOnlyAttribute)) ?? false) && !(getter?.HasAttribute(typeof(CompilerGeneratedAttribute)) ?? false), "readonly");
 
             return mods;
         }

@@ -71,9 +71,38 @@ namespace Semverify.ApiModel
             return "{ }";
         }
 
+        public IList<string> GetConstraints()
+        {
+            return ResolveConstraints(TypeInfo.GetGenericArguments());
+        }
+
         public override string GetFullName()
         {
             return TypeInfo.ResolveQualifiedName();
+        }
+
+        public IList<ApiTypeDetails> GetGenericArgs()
+        {
+            var nullableEnumerator = (TypeInfo.GetReferenceNullability() ?? new byte[] { 0 }).AsEnumerable().GetEnumerator();
+            nullableEnumerator.MoveNext();
+
+            return TypeInfo.GetGenericArguments().Select(g =>
+            {
+                var type = g.GetType();
+                if (!type.IsValueType || type.IsGenericType)
+                {
+                    if (!nullableEnumerator.MoveNext())
+                    {
+                        // Assume if we don't have enough nullable bytes to represent the type
+                        // that it used NullableAttribute(byte) instead of NullableAttribute(byte[])
+                        // because all members have the same nullability and could be condensed
+                        nullableEnumerator.Reset();
+                        nullableEnumerator.MoveNext();
+                    }
+                }
+
+                return new ApiTypeDetails(g, new byte[] { nullableEnumerator.Current });
+            }).ToList();
         }
 
         public override string GetLocalName()
@@ -120,7 +149,7 @@ namespace Semverify.ApiModel
             return $"{modString}{GetFullName()}{implString}{constraintString}{accessorString}";
         }
 
-        private string GetBaseType()
+        public string GetBaseType()
         {
             if (TypeInfo.BaseType != null && !ExcludedBaseTypes.Contains(TypeInfo.BaseType.FullName))
             {
