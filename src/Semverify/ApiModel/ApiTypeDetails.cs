@@ -36,7 +36,7 @@ namespace Semverify.ApiModel
             }
             Modifiers.AddIf(param.HasAttribute(typeof(ParamArrayAttribute)), "params");
 
-            if (param.IsOptional)
+            if (param.HasDefaultValue)
             {
                 try
                 {
@@ -45,6 +45,11 @@ namespace Semverify.ApiModel
                     {
                         defaultVal = $"\"{defaultVal}\"";
                     }
+                    else if (param.ParameterType.IsValueType && !param.ParameterType.IsGenericType && defaultVal == null)
+                    {
+                        defaultVal = "default";
+                    }
+
                     DefaultValue = $" = {defaultVal ?? "null"}";
                 }
                 catch (BadImageFormatException)
