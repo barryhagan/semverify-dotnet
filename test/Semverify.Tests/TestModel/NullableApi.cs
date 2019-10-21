@@ -32,6 +32,9 @@ namespace Semverify.Tests.TestModel
         [ApiSignature("protected delegate string? Semverify.Tests.TestModel.NullableApi.OnNullableReturn(object sender, Semverify.Tests.TestModel.NullableApi.ReturnArgs? args);")]
         protected delegate string? OnNullableReturn(object sender, ReturnArgs? args);
 
+        [ApiSignature("protected delegate string? Semverify.Tests.TestModel.NullableApi.OnNullableReturn<T>(object sender, Semverify.Tests.TestModel.NullableApi.ReturnArgs? args, T? gen) where T : class;")]
+        protected delegate string? OnNullableReturn<T>(object sender, ReturnArgs? args, T? gen) where T : class;
+
         protected delegate string OnReturn(object sender, ReturnArgs? args);
 
         public ReturnType NonNullField = new ReturnType();
